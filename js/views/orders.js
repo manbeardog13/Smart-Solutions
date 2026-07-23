@@ -2,7 +2,7 @@
 // views/orders.js — work orders (radni nalozi) + placed part reorders.
 // ============================================================================
 import * as db from "../db.js";
-import { esc, icon } from "../ui.js";
+import { esc, icon, thumb } from "../ui.js";
 
 export function render(main) {
   const orders = db.listOrders();
@@ -29,7 +29,7 @@ export function render(main) {
             const item = items.get(p.itemId);
             return `
             <div class="row">
-              ${item ? `<img src="${esc(item.img)}" alt="" loading="lazy">` : ""}
+              ${item ? thumb(item) : ""}
               <span class="b"><span class="n">${esc(item ? item.name : p.itemId)}</span>
                 <span class="a">${esc(p.id)} · dobavljač: ${esc(p.supplier)}</span></span>
               <span class="rt"><span class="big">${esc(String(p.quantity))}</span>

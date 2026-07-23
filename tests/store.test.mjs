@@ -73,6 +73,15 @@ test("tampered or schema-drifted session blobs are rejected and removed", () => 
   }
 });
 
+test("an invalid previous session still triggers the protected-data wipe", () => {
+  const s = fakeStorage({
+    "ss.session": '{"corrupt":true}',
+    "ss.gemini.context": "someone's assistant history",
+  });
+  signIn(ana, s);
+  assert.equal(s.getItem("ss.gemini.context"), null);
+});
+
 test("a well-formed persisted session still loads", () => {
   const s = fakeStorage();
   signIn(vido, s);

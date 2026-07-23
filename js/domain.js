@@ -9,6 +9,13 @@
 // overridden per deployment via saved settings.
 export const ROLES = ["vlasnik", "majstor", "skladistar"];
 
+// Single source of truth for view labels — nav (app.js) and the admin
+// visibility matrix both read from here.
+export const VIEW_LABELS = {
+  dashboard: "Ploča", warehouse: "Skladište", movements: "Kretanja",
+  orders: "Radni nalozi", scan: "Skeniranje", admin: "Upravljanje",
+};
+
 export const DEFAULT_VISIBILITY = {
   vlasnik: ["dashboard", "warehouse", "movements", "orders", "scan", "admin"],
   majstor: ["dashboard", "warehouse", "orders", "scan"],
@@ -88,8 +95,9 @@ export function parseQrPayload(text) {
 // The application always knows what device it is on. Ultrawide gets the
 // 80dvw stage; everything else fills the viewport edge to edge.
 export function deviceClass(width) {
-  if (width < 700) return "phone";
-  if (width < 1100) return "tablet";
+  // Boundaries match css/app.css media queries exactly (<=700 is phone there).
+  if (width <= 700) return "phone";
+  if (width <= 1100) return "tablet";
   if (width < 1800) return "desktop";
   return "ultrawide";
 }

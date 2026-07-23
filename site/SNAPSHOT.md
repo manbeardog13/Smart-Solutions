@@ -16,9 +16,11 @@ https://smart-solutions-operations.manbeardog.chatgpt.site/ taken on
   requests return 404), so the original components, tests, and build
   configuration cannot be reconstructed from the deployment. They live in
   the ChatGPT workspace where the app was authored.
-- The app is fully client-side: the bundles contain no `fetch` calls or API
-  endpoints. All dashboard data (inventory, work orders, movements) is
-  in-memory demo data, consistent with the "Demo" badge in the UI.
+- The deployed demo runs client-side: dashboard data (inventory, work
+  orders, movements) is in-memory demo data, consistent with the "Demo"
+  badge in the UI. The application bundle does embed a Supabase client
+  (auth/rest/realtime URL construction), so the build is backend-capable —
+  no live endpoint was configured in the deployed demo.
 
 ## Inventory
 

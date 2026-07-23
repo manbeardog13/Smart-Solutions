@@ -79,7 +79,6 @@ a{color:var(--red);text-underline-offset:3px}
   50%{filter:drop-shadow(0 4px 16px rgba(221,4,38,.28))}}
 
 .meta{font-size:9px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:var(--ink3)}
-.d{font-family:var(--display);font-weight:900;text-transform:uppercase;letter-spacing:-.035em}
 
 /* ══ splash ══ */
 .splash{position:fixed;inset:0;z-index:100;display:grid;place-items:center;align-content:center;
@@ -225,7 +224,6 @@ main{min-height:100dvh;padding-left:var(--rail);transition:padding-left .2s var(
         letter-spacing:-.035em;margin:0;line-height:1}
 .demo-badge{font-size:8.5px;font-weight:900;letter-spacing:.12em;color:#fff;background:var(--red);
       padding:3px 7px;text-transform:uppercase}
-.top .right{margin-left:auto;display:flex;align-items:center;gap:8px}
 
 /* the stage: full width; ultrawide gets the elegant 80dvw stage */
 .stage{padding:22px 26px 90px;max-width:none;margin:0 auto}
@@ -249,7 +247,7 @@ main{min-height:100dvh;padding-left:var(--rail);transition:padding-left .2s var(
 .card .v{font-family:var(--display);font-weight:900;font-size:36px;letter-spacing:-.05em;
          line-height:.95;margin-top:7px;font-variant-numeric:tabular-nums}
 .card.alarm{background:var(--red);border-color:transparent;color:#fff}
-.card.alarm .meta{color:rgba(255,255,255,.65)}
+.card.alarm .meta{color:rgba(255,255,255,.85)}
 .card.alarm::before{background:#fff}
 /* dealt entrance: cards fly in from center, pairs left/right, ≤620 ms */
 .deal .card{animation:deal .26s var(--snap) both;animation-delay:var(--deal-delay,0ms)}
@@ -291,8 +289,8 @@ main{min-height:100dvh;padding-left:var(--rail);transition:padding-left .2s var(
 /* ══ right utility shelf — hidden capsule, revealed at the edge ══ */
 .shelf{position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:35;display:flex;
        align-items:center}
-/* the handle is a real button: 44px touch/keyboard target with a slim visual */
-.shelf .handle{width:26px;height:88px;padding:0;border:0;background:none;position:relative;
+/* the handle is a real button: 44px-wide touch/keyboard target, slim visual */
+.shelf .handle{width:44px;height:88px;padding:0;border:0;background:none;position:relative;
                cursor:pointer;display:block}
 .shelf .handle::after{content:"";position:absolute;right:0;top:50%;transform:translateY(-50%);
                width:5px;height:74px;border-radius:4px 0 0 4px;background:var(--red);opacity:.45;
@@ -330,10 +328,17 @@ main{min-height:100dvh;padding-left:var(--rail);transition:padding-left .2s var(
 .btn-sq.wide{min-width:88px}
 .btn-sq:disabled{opacity:.55;cursor:default}
 
+/* honest placeholder for items without catalogue photography */
+.thumb-ph{width:44px;height:44px;flex:0 0 44px;border-radius:9px;display:grid;place-items:center;
+          background:var(--sunk);color:var(--ink3);font-family:var(--display);font-weight:900;
+          font-size:16px;text-transform:uppercase}
+.thumb-ph.detail-img{width:84px;height:84px;flex-basis:84px;font-size:28px;border-radius:14px}
+
 /* ══ scanned-item detail ══ */
 .detail-img{width:84px;height:84px;flex:0 0 84px;border-radius:14px;object-fit:cover;
             background:var(--sunk)}
-.a.warn{color:var(--red);font-weight:800}
+.a.warn{color:var(--red-d);font-weight:800}
+:root[data-theme="dark"] .a.warn{color:#FF8A99}
 
 /* ══ top-bar compact controls (phones — the rail foot is hidden there) ══ */
 .top .right{margin-left:auto;display:flex;align-items:center;gap:6px}
@@ -366,7 +371,7 @@ main{min-height:100dvh;padding-left:var(--rail);transition:padding-left .2s var(
 /* ══ responsive ══ */
 @media(max-width:700px){
   :root{--rail:0px}
-  main{padding-left:0;padding-bottom:64px}
+  main,.shell.pinned main{padding-left:0;padding-bottom:64px}
   .rail{top:auto;bottom:0;right:0;left:0;width:auto;height:60px;flex-direction:row;
         align-items:center;gap:0;padding:4px 6px calc(4px + env(safe-area-inset-bottom));
         border-right:0;border-top:1px solid var(--line)}

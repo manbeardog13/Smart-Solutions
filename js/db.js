@@ -11,11 +11,18 @@ import { reorderProposal } from "./domain.js";
 
 const DB_KEY = "ss.demo.db";
 
+// structuredClone is missing on older warehouse handhelds — degrade politely.
+export function clone(value) {
+  return typeof structuredClone === "function"
+    ? structuredClone(value)
+    : JSON.parse(JSON.stringify(value));
+}
+
 function seed() {
   return {
-    items: structuredClone(DEMO_ITEMS),
-    orders: structuredClone(DEMO_ORDERS),
-    movements: structuredClone(DEMO_MOVEMENTS),
+    items: clone(DEMO_ITEMS),
+    orders: clone(DEMO_ORDERS),
+    movements: clone(DEMO_MOVEMENTS),
     placedOrders: [],
     visibility: null, // admin override of DEFAULT_VISIBILITY
   };
@@ -59,15 +66,27 @@ export function adjustQty(itemId, delta, who) {
   const db = load();
   const item = db.items.find((i) => i.id === itemId);
   if (!item) throw new Error("Artikl nije pronađen.");
-  item.qty = Math.max(0, Number(item.qty) + Number(delta));
+  const before = Number(item.qty);
+  item.qty = Math.max(0, before + Number(delta));
+  const applied = item.qty - before;
+  // Only movements that actually happened get logged.
+  if (applied === 0) {
+    if (delta < 0) throw new Error("Nema zaliha za izdati.");
+    return item;
+  }
   db.movements.unshift({
     id: "m" + Date.now(),
-    ts: new Date().toLocaleTimeString("hr-HR", { hour: "2-digit", minute: "2-digit" }),
+    ts: new Date().toLocaleString("hr-HR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }),
     who: who || "—",
-    what: delta >= 0 ? "Zaprimljeno" : "Izdano na teren",
+    what: applied >= 0 ? "Zaprimljeno" : "Izdano na teren",
     item: itemId,
-    qty: Number(delta),
+    qty: applied,
   });
+  // Receiving stock back above the minimum closes the item's open reorder —
+  // the delivery arrived, so the next shortage can order again.
+  if (applied > 0 && item.qty > Number(item.min)) {
+    db.placedOrders = db.placedOrders.filter((o) => o.itemId !== itemId);
+  }
   save(db);
   return item;
 }

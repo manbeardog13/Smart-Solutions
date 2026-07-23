@@ -4,11 +4,12 @@
 // scanned sticker must show the exact product before any action.
 // ============================================================================
 import * as db from "../db.js";
-import { isLowStock, reorderProposal } from "../domain.js";
-import { esc, icon, toast } from "../ui.js";
+import { isLowStock, reorderProposal, parseQrPayload } from "../domain.js";
+import { esc, icon, toast, hrCount, thumb } from "../ui.js";
 
 let query = "";
 let queryOwner = null; // one user's search never leaks to the next
+let openDetail = null; // { itemId, hash } while a scanned item is on screen
 
 export function render(main, ctx) {
   const { session } = ctx;
@@ -26,7 +27,8 @@ export function render(main, ctx) {
       <div id="wh-list"></div>
     </div>`;
 
-  if (ctx.itemId) renderDetail(main, ctx, ctx.itemId, ctx.hash);
+  openDetail = ctx.itemId ? { itemId: ctx.itemId, hash: ctx.hash } : null;
+  if (openDetail) renderDetail(main, ctx);
 
   // Search re-renders ONLY the list, so the input (and its caret) is never
   // touched — no full-view teardown per keystroke.
@@ -38,7 +40,7 @@ export function render(main, ctx) {
 function renderList(main, ctx) {
   const items = db.listItems().filter((it) =>
     !query || (it.name + it.sku + it.id + it.supplier).toLowerCase().includes(query.toLowerCase()));
-  main.querySelector("#wh-count").textContent = `${items.length} artikala`;
+  main.querySelector("#wh-count").textContent = hrCount(items.length, ["artikl", "artikla", "artikala"]);
   const list = main.querySelector("#wh-list");
   list.innerHTML = items.length === 0
     ? `<div class="row"><span class="b"><span class="n">Nema rezultata.</span></span></div>`
@@ -46,11 +48,34 @@ function renderList(main, ctx) {
   wireRowActions(list, main, ctx);
 }
 
+// Every data change repaints the list AND the open detail — one item, one
+// truth on screen. Keyboard focus survives the innerHTML swap by re-finding
+// the equivalent control.
+function refresh(main, ctx) {
+  const active = document.activeElement;
+  const focusKey = active && active.dataset
+    ? ["recv", "issue", "reorder", "dRecv", "dIssue", "dOrder"].find((k) => active.dataset[k] !== undefined)
+    : null;
+  const focusVal = focusKey ? active.dataset[focusKey] : null;
+  renderList(main, ctx);
+  if (openDetail) renderDetail(main, ctx);
+  if (focusKey) {
+    const attr = "data-" + focusKey.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase());
+    const again = main.querySelector(`[${attr}${focusVal ? `="${CSS.escape(focusVal)}"` : ""}]`);
+    if (again) again.focus({ preventScroll: true });
+  }
+}
+
+function act(main, ctx, fn) {
+  try { fn(); } catch (err) { toast(err.message); }
+  refresh(main, ctx);
+}
+
 function rowHTML(it) {
   const ordered = db.openReorderFor(it.id);
   return `
     <div class="row">
-      <img src="${esc(it.img)}" alt="" loading="lazy" width="44" height="44">
+      ${thumb(it)}
       <span class="b"><span class="n">${esc(it.name)}</span>
         <span class="a">${esc(it.id)} · ${esc(it.sku)} · ${esc(it.loc)} · ${esc(it.supplier)}</span></span>
       ${isLowStock(it) ? '<span class="badge-low">Nisko</span>' : ""}
@@ -67,14 +92,10 @@ function rowHTML(it) {
 }
 
 function wireRowActions(scope, main, ctx) {
-  const act = (fn) => {
-    try { fn(); } catch (err) { toast(err.message); }
-    renderList(main, ctx);
-  };
   scope.querySelectorAll("[data-recv]").forEach((b) => b.onclick = () =>
-    act(() => db.adjustQty(b.dataset.recv, +1, ctx.session.name)));
+    act(main, ctx, () => db.adjustQty(b.dataset.recv, +1, ctx.session.name)));
   scope.querySelectorAll("[data-issue]").forEach((b) => b.onclick = () =>
-    act(() => db.adjustQty(b.dataset.issue, -1, ctx.session.name)));
+    act(main, ctx, () => db.adjustQty(b.dataset.issue, -1, ctx.session.name)));
   scope.querySelectorAll("[data-reorder]").forEach((b) => b.onclick = () => {
     const item = db.getItem(b.dataset.reorder);
     confirmReorder(main, ctx, item, reorderProposal(item));
@@ -82,7 +103,8 @@ function wireRowActions(scope, main, ctx) {
 }
 
 // ---- QR deep link: the exact product, front and center ----------------------
-function renderDetail(main, ctx, itemId, hash) {
+function renderDetail(main, ctx) {
+  const { itemId, hash } = openDetail;
   const target = main.querySelector("#wh-detail");
   const item = db.getItem(itemId);
   if (!item) {
@@ -95,9 +117,8 @@ function renderDetail(main, ctx, itemId, hash) {
   }
   // The sticker also carries a supplier — the database is the authority, but
   // a mismatch is worth a warning (swapped or stale sticker).
-  let stickerSupplier = null;
-  const m = String(hash || "").match(/[?&]s=([^&]+)/);
-  if (m) { try { stickerSupplier = decodeURIComponent(m[1]); } catch { stickerSupplier = null; } }
+  const parsed = parseQrPayload("#" + (hash || ""));
+  const stickerSupplier = parsed ? parsed.supplier : null;
   const mismatch = stickerSupplier && stickerSupplier !== item.supplier;
   const low = isLowStock(item);
   const ordered = db.openReorderFor(item.id);
@@ -108,7 +129,7 @@ function renderDetail(main, ctx, itemId, hash) {
       <div class="ph">${icon("scan")}<h2>Skenirani artikl</h2>
         <span class="meta mono" style="margin-left:auto">${esc(item.id)}</span></div>
       <div class="row">
-        <img src="${esc(item.img)}" alt="${esc(item.name)}" class="detail-img">
+        ${thumb(item, "detail-img")}
         <span class="b"><span class="n">${esc(item.name)}</span>
           <span class="a">${esc(item.sku)} · lokacija ${esc(item.loc)} · dobavljač ${esc(item.supplier)}</span>
           ${mismatch ? `<span class="a warn">⚠ Naljepnica navodi drugog dobavljača
@@ -125,14 +146,12 @@ function renderDetail(main, ctx, itemId, hash) {
       </div>
     </div>`;
 
-  const redraw = () => { renderDetail(main, ctx, itemId, hash); renderList(main, ctx); };
-  const act = (fn) => { try { fn(); } catch (err) { toast(err.message); } redraw(); };
   target.querySelector("[data-d-recv]").onclick = () =>
-    act(() => db.adjustQty(item.id, +1, ctx.session.name));
+    act(main, ctx, () => db.adjustQty(item.id, +1, ctx.session.name));
   target.querySelector("[data-d-issue]").onclick = () =>
-    act(() => db.adjustQty(item.id, -1, ctx.session.name));
+    act(main, ctx, () => db.adjustQty(item.id, -1, ctx.session.name));
   const orderBtn = target.querySelector("[data-d-order]");
-  if (orderBtn) orderBtn.onclick = () => act(() => {
+  if (orderBtn) orderBtn.onclick = () => act(main, ctx, () => {
     const o = db.placeReorder(item.id);
     toast(`Narudžba poslana: ${item.name} × ${o.quantity} (${o.supplier})`);
   });
@@ -155,22 +174,25 @@ function confirmReorder(main, ctx, item, proposal) {
       </div>
     </div>`;
   document.body.appendChild(scrim);
-  const close = () => {
+  const close = (restoreFocus = true) => {
     scrim.remove();
     document.removeEventListener("keydown", onKey);
-    if (previouslyFocused && previouslyFocused.isConnected) previouslyFocused.focus();
+    if (restoreFocus && previouslyFocused && previouslyFocused.isConnected) previouslyFocused.focus();
   };
+  scrim._close = close; // router/logout cleanup goes through here (no leaks)
   const onKey = (e) => { if (e.key === "Escape") close(); };
   document.addEventListener("keydown", onKey);
-  scrim.querySelector("[data-cancel]").onclick = close;
+  scrim.querySelector("[data-cancel]").onclick = () => close();
   scrim.addEventListener("click", (e) => { if (e.target === scrim) close(); });
   scrim.querySelector("[data-place]").onclick = () => {
     try {
       const o = db.placeReorder(item.id);
       toast(`Narudžba poslana: ${item.name} × ${o.quantity} (${o.supplier})`);
     } catch (err) { toast(err.message); }
-    close();
-    renderList(main, ctx);
+    close(false);          // the old row button is about to be replaced
+    refresh(main, ctx);    // repaint list + detail, then land focus sanely
+    const first = main.querySelector("#wh-q");
+    if (first) first.focus({ preventScroll: true });
   };
   scrim.querySelector("[data-place]").focus();
 }

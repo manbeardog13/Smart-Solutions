@@ -9,7 +9,7 @@
 import * as db from "../db.js";
 import { qrPayload } from "../domain.js";
 import { appBaseUrl } from "../config.js";
-import { esc, icon, toast } from "../ui.js";
+import { esc, icon, toast, thumb } from "../ui.js";
 
 export function render(main) {
   const items = db.listItems();
@@ -23,7 +23,7 @@ export function render(main) {
           Demo: odaberi artikl za simulaciju skena.</span></span></div>
       ${items.map((it) => `
         <button class="row" data-scan="${esc(it.id)}" data-supplier="${esc(it.supplier)}">
-          <img src="${esc(it.img)}" alt="" loading="lazy" width="44" height="44">
+          ${thumb(it)}
           <span class="b"><span class="n">${esc(it.name)}</span>
             <span class="a mono" style="text-transform:none">${esc(qrPayload(it, base))}</span></span>
           <span class="rt"><span class="ag">simuliraj sken</span></span>

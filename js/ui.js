@@ -28,6 +28,24 @@ export function icon(name, size = 18) {
   return `<svg class="ic" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ""}</svg>`;
 }
 
+// Croatian count phrases: 1 artikl, 2-4 artikla, 5+ artikala (with 11-14 rule).
+export function hrCount(n, [one, few, many]) {
+  const mod10 = n % 10, mod100 = n % 100;
+  const word = (mod10 === 1 && mod100 !== 11) ? one
+    : (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) ? few : many;
+  return `${n} ${word}`;
+}
+
+// Product thumbnail with an honest fallback: items without catalogue
+// photography get a neutral initial tile, never a wrong product photo
+// (docs/REQUIREMENTS.md: no invented substitutes).
+export function thumb(item, cls = "") {
+  if (item.img) {
+    return `<img src="${esc(item.img)}" alt="" loading="lazy" class="${esc(cls)}">`;
+  }
+  return `<span class="thumb-ph ${esc(cls)}" aria-hidden="true">${esc((item.name || "?")[0])}</span>`;
+}
+
 let toastTimer = null;
 export function toast(message) {
   let el = document.getElementById("toast");

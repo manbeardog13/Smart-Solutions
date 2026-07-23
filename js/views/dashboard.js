@@ -3,7 +3,7 @@
 // ============================================================================
 import * as db from "../db.js";
 import { lowStockItems, dealDelays } from "../domain.js";
-import { esc, icon } from "../ui.js";
+import { esc, icon, thumb } from "../ui.js";
 
 export function render(main, ctx) {
   const items = db.listItems();
@@ -12,7 +12,7 @@ export function render(main, ctx) {
   const movements = db.listMovements();
 
   const cards = [
-    { meta: "Pozicija spremno", v: String(items.length - low.length), alarm: false },
+    { meta: "Spremne pozicije", v: String(items.length - low.length), alarm: false },
     { meta: "Ispod minimuma", v: String(low.length), alarm: low.length > 0 },
     { meta: "Otvoreni nalozi", v: String(orders.length), alarm: false },
     { meta: "Kretanja danas", v: String(movements.length), alarm: false },
@@ -39,7 +39,7 @@ export function render(main, ctx) {
       ${low.length === 0 ? `<div class="row"><div class="b"><div class="n">Sve je pod kontrolom.</div></div></div>`
         : low.map((it) => `
         <button class="row" data-goto-item="${esc(it.id)}">
-          <img src="${esc(it.img)}" alt="" loading="lazy">
+          ${thumb(it)}
           <span class="b"><span class="n">${esc(it.name)}</span>
             <span class="a">${esc(it.loc)} · ${esc(it.supplier)}</span></span>
           <span class="badge-low">Nisko</span>

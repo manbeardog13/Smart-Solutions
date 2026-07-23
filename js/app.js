@@ -5,18 +5,18 @@
 // ============================================================================
 
 import { getState, setState, loadSession, signIn, signOut, on } from "./store.js";
-import { viewsForRole, isFieldRole, deviceClass } from "./domain.js";
+import { viewsForRole, isFieldRole, deviceClass, VIEW_LABELS } from "./domain.js";
 import * as db from "./db.js";
 import { esc, icon, go, setThemeColor } from "./ui.js";
 
 const VIEW_DEFS = [
-  { key: "dashboard", route: "/", label: "Ploča", ic: "dash", load: () => import("./views/dashboard.js") },
-  { key: "warehouse", route: "/warehouse", label: "Skladište", ic: "box", load: () => import("./views/warehouse.js") },
-  { key: "movements", route: "/movements", label: "Kretanja", ic: "move", load: () => import("./views/movements.js") },
-  { key: "orders", route: "/orders", label: "Radni nalozi", ic: "order", load: () => import("./views/orders.js") },
-  { key: "scan", route: "/scan", label: "Skeniranje", ic: "scan", load: () => import("./views/scan.js") },
-  { key: "admin", route: "/admin", label: "Upravljanje", ic: "admin", load: () => import("./views/admin.js") },
-];
+  { key: "dashboard", route: "/", ic: "dash", load: () => import("./views/dashboard.js") },
+  { key: "warehouse", route: "/warehouse", ic: "box", load: () => import("./views/warehouse.js") },
+  { key: "movements", route: "/movements", ic: "move", load: () => import("./views/movements.js") },
+  { key: "orders", route: "/orders", ic: "order", load: () => import("./views/orders.js") },
+  { key: "scan", route: "/scan", ic: "scan", load: () => import("./views/scan.js") },
+  { key: "admin", route: "/admin", ic: "admin", load: () => import("./views/admin.js") },
+].map((v) => ({ ...v, label: VIEW_LABELS[v.key] }));
 
 // The real logo artwork (brand/, background removed). logo-fx adds the
 // masked sheen sweep + lift on hover; logo-idle breathes a soft red glow.
@@ -54,6 +54,7 @@ function syncThemeControls() {
   const dark = isDark();
   document.querySelectorAll(".theme").forEach((el) => {
     el.setAttribute("aria-checked", String(dark));
+    el.setAttribute("aria-label", dark ? "Tamno — prebaci na svijetlo" : "Svijetlo — prebaci na tamno");
     const lbl = el.querySelector(".lbl");
     if (lbl) lbl.textContent = dark ? "Tamno" : "Svijetlo";
   });
@@ -128,6 +129,7 @@ function renderGate() {
   root.querySelector("#login-form").onsubmit = (e) => { e.preventDefault(); soon(); };
   root.querySelectorAll("[data-user]").forEach((btn) => {
     btn.onclick = () => {
+      if (root.querySelector(".gate.out")) return; // hand-off already running
       const user = db.demoUsers().find((u) => u.id === btn.dataset.user);
       signIn(user);
       // Continuous transition, not a hard cut: the gate glides out, the
@@ -161,6 +163,7 @@ function renderShell(freshLogin = false) {
   const nav = navForSession(session);
   let pinned = false;
   try { pinned = JSON.parse(localStorage.getItem(PIN_KEY)) === true; } catch { /* default */ }
+  if (document.body.classList.contains("phone")) pinned = false; // bottom bar, nothing to pin
   root.innerHTML = `
     <div class="shell ${pinned ? "pinned" : ""}">
       <div class="wash"></div>
@@ -168,9 +171,8 @@ function renderShell(freshLogin = false) {
         <button class="brand" data-home aria-label="Na ploču">
           <span class="mark">${MARK_IMG}</span><span class="wm-img">${WORD_IMG}</span>
         </button>
-        <button class="nl pin" data-pin aria-pressed="${pinned}"
-                title="${pinned ? "Otkvači izbornik" : "Zakvači izbornik"}">
-          ${icon("pin")}<span class="txt">${pinned ? "Otkvači" : "Zakvači"}</span>
+        <button class="nl pin" data-pin aria-pressed="${pinned}" title="Zakvači izbornik">
+          ${icon("pin")}<span class="txt">Zakvači izbornik</span>
         </button>
         <nav>
           ${nav.map((v) => `
@@ -209,7 +211,13 @@ function renderShell(freshLogin = false) {
 
   currentMain = document.getElementById("main");
   syncThemeControls();
-  const logout = () => { closeScrims(); signOut(); renderGate(); };
+  const logout = () => {
+    closeScrims();
+    signOut();
+    document.body.classList.remove("field-mode");
+    try { history.replaceState(null, "", location.pathname + location.search); } catch { /* file:// */ }
+    renderGate();
+  };
   root.querySelector("[data-home]").onclick = () => go("/");
   root.querySelector("[data-logout]").onclick = logout;
   root.querySelector("[data-logout-top]").onclick = logout;
@@ -222,8 +230,6 @@ function renderShell(freshLogin = false) {
     shellEl.classList.toggle("pinned", now);
     rail.classList.toggle("open", now);
     e.currentTarget.setAttribute("aria-pressed", String(now));
-    e.currentTarget.querySelector(".txt").textContent = now ? "Otkvači" : "Zakvači";
-    e.currentTarget.title = now ? "Otkvači izbornik" : "Zakvači izbornik";
     try { localStorage.setItem(PIN_KEY, JSON.stringify(now)); } catch { /* fine */ }
   };
 
@@ -240,13 +246,7 @@ function renderShell(freshLogin = false) {
       go(btn.dataset.route);
     };
   });
-  if (touchOnly) {
-    document.addEventListener("pointerdown", (e) => {
-      if (!rail.contains(e.target) && !shellEl.classList.contains("pinned")) {
-        rail.classList.remove("open");
-      }
-    }, { passive: true });
-  }
+
 
   // Shelf: the handle is a real button, so touch and keyboard both work.
   const shelf = document.getElementById("shelf");
@@ -259,10 +259,23 @@ function renderShell(freshLogin = false) {
   route(freshLogin);
 }
 
+// One document-level closer for the touch rail — bound once at boot, reads
+// the live DOM, so re-renders never stack listeners.
+function railOutsideCloser(e) {
+  const rail = document.getElementById("rail");
+  const shell = document.querySelector(".shell");
+  if (!rail || !shell) return;
+  if (!rail.contains(e.target) && !shell.classList.contains("pinned")) {
+    rail.classList.remove("open");
+  }
+}
+
 // Body-level overlays (reorder scrims) must never outlive the view or the
 // session that opened them.
 function closeScrims() {
-  document.querySelectorAll(".scrim").forEach((s) => s.remove());
+  document.querySelectorAll(".scrim").forEach((s) => {
+    if (typeof s._close === "function") s._close(); else s.remove();
+  });
 }
 
 // ---- Router -----------------------------------------------------------------
@@ -273,18 +286,25 @@ let routeSeq = 0;
 
 async function route(freshLogin = false) {
   const { session } = getState();
-  if (!session) { renderGate(); return; }
+  if (!session) {
+    // Never rebuild an already-visible gate (it would wipe typed input).
+    if (!root.querySelector(".gate")) renderGate();
+    return;
+  }
   closeScrims();
   const seq = ++routeSeq;
   const hash = location.hash.replace(/^#/, "") || "/";
   const nav = navForSession(session);
   const itemMatch = hash.match(/^\/item\/([^/?]+)/);
-  const def = nav.find((v) => v.route === hash) ||
-              (itemMatch ? nav.find((v) => v.key === "warehouse") : null) ||
-              nav[0];
-  // Normalize unknown or disallowed hashes so the URL never lies about the view.
-  if (hash !== def.route && !itemMatch) {
-    history.replaceState(null, "", "#" + def.route);
+  const wh = itemMatch ? nav.find((v) => v.key === "warehouse") : null;
+  const def = nav.find((v) => v.route === hash) || wh || nav[0];
+  // Normalize unknown or disallowed hashes so the URL never lies about the
+  // view — including item deep links a role cannot open.
+  if (hash !== def.route && !(itemMatch && wh)) {
+    try { history.replaceState(null, "", "#" + def.route); } catch { /* file:// */ }
+    if (itemMatch && !wh) {
+      import("./ui.js").then(({ toast }) => toast("Nemate pristup skladištu za ovu naljepnicu."));
+    }
   }
   setState({ route: def.route });
   document.querySelectorAll(".nl[data-route]").forEach((b) =>
@@ -296,10 +316,11 @@ async function route(freshLogin = false) {
   currentMain.innerHTML = "";
   mod.render(currentMain, {
     session, hash, freshLogin,
-    itemId: itemMatch ? decodeSafe(itemMatch[1]) : null,
+    itemId: itemMatch && wh ? decodeSafe(itemMatch[1]) : null,
   });
-  // Keyboard/screen-reader users land on the new view's title, not in limbo.
-  if (!freshLogin && title) title.focus({ preventScroll: true });
+  // Keyboard/screen-reader users land on the new view's title, not in limbo —
+  // including right after login, where the old gate button no longer exists.
+  if (title) title.focus({ preventScroll: true });
 }
 
 function decodeSafe(part) {
@@ -312,6 +333,9 @@ function boot() {
   applyDevice();
   addEventListener("resize", applyDevice);
   addEventListener("hashchange", () => route());
+  if (matchMedia("(hover: none)").matches) {
+    document.addEventListener("pointerdown", railOutsideCloser, { passive: true });
+  }
   document.addEventListener("click", (e) => {
     const t = e.target.closest && e.target.closest("[data-theme-toggle]");
     if (t) toggleTheme();

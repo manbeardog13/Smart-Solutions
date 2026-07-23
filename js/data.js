@@ -15,16 +15,18 @@ export const DEMO_ITEMS = [
     qty: 4, min: 2, batch: 2, loc: "A-1-2", img: "catalogue/thumbs/aquarea-monoblock.webp" },
   { id: "SS-0002", name: "Aquarea All-in-One 7 kW", sku: "WH-ADC0709J3E5", supplier: "Panasonic HR",
     qty: 2, min: 2, batch: 2, loc: "A-1-3", img: "catalogue/thumbs/aquarea-unit-allinone.webp" },
+  // Consumables have no catalogue photo — the UI renders an honest initial
+  // tile instead of borrowing a wrong product image (catalogue is authoritative).
   { id: "SS-0003", name: "Bakrena cijev 1/4\" (m)", sku: "CU-14", supplier: "Metal d.o.o.",
-    qty: 34, min: 50, batch: 100, loc: "B-2-1", img: "catalogue/thumbs/aquarea-range.webp" },
+    qty: 34, min: 50, batch: 100, loc: "B-2-1", img: null },
   { id: "SS-0004", name: "Bakrena cijev 3/8\" (m)", sku: "CU-38", supplier: "Metal d.o.o.",
-    qty: 120, min: 50, batch: 100, loc: "B-2-2", img: "catalogue/thumbs/aquarea-range.webp" },
+    qty: 120, min: 50, batch: 100, loc: "B-2-2", img: null },
   { id: "SS-0005", name: "Zidni nosač vanjske jedinice", sku: "NOS-450", supplier: "Termo-oprema",
-    qty: 8, min: 10, batch: 20, loc: "C-1-1", img: "catalogue/thumbs/aquarea-unit-compact.webp" },
+    qty: 8, min: 10, batch: 20, loc: "C-1-1", img: null },
   { id: "SS-0006", name: "Kondenzna pumpa mini", sku: "KP-MINI", supplier: "Termo-oprema",
-    qty: 15, min: 6, batch: 12, loc: "C-1-4", img: "catalogue/thumbs/aquarea-tower.webp" },
+    qty: 15, min: 6, batch: 12, loc: "C-1-4", img: null },
   { id: "SS-0007", name: "Izolacija 9 mm (m)", sku: "IZO-9", supplier: "Izolacije Adria",
-    qty: 210, min: 100, batch: 200, loc: "B-3-1", img: "catalogue/thumbs/aquarea-lifestyle.webp" },
+    qty: 210, min: 100, batch: 200, loc: "B-3-1", img: null },
 ];
 
 export const DEMO_ORDERS = [

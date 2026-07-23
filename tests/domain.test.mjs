@@ -94,6 +94,15 @@ test("device classes: phone, tablet, desktop, ultrawide", () => {
   assert.equal(deviceClass(3440), "ultrawide");
 });
 
+test("device-class boundaries agree with the CSS media queries", () => {
+  assert.equal(deviceClass(700), "phone");     // css: max-width:700px
+  assert.equal(deviceClass(701), "tablet");
+  assert.equal(deviceClass(1100), "tablet");   // css: max-width:1100px
+  assert.equal(deviceClass(1101), "desktop");
+  assert.equal(deviceClass(1799), "desktop");
+  assert.equal(deviceClass(1800), "ultrawide");
+});
+
 // ---- dashboard deal ---------------------------------------------------------
 test("deal delays: pairs land together, everything settles within 620 ms", () => {
   const delays = dealDelays(4);
@@ -102,6 +111,7 @@ test("deal delays: pairs land together, everything settles within 620 ms", () =>
   assert.equal(delays[2], delays[3]);
   const settle = Math.max(...delays) + 260; // last card animates 260 ms
   assert.ok(settle <= 620, `settled in ${settle} ms`);
+  assert.ok(delays[2] > delays[0], "later pairs must actually stagger, not land at 0");
 });
 
 test("deal delays handle a single card", () => {

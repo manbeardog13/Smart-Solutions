@@ -14,8 +14,6 @@ const state = {
   route: "/",
   theme: null,        // "light" | "dark"
   device: "desktop",  // phone | tablet | desktop | ultrawide
-  navPinned: false,
-  refreshView: null,
 };
 
 const listeners = new Map();
@@ -37,11 +35,6 @@ export function emit(event, payload) {
   listeners.get(event)?.forEach((fn) => {
     try { fn(payload); } catch (err) { console.error(`store listener "${event}" failed`, err); }
   });
-}
-
-export function setViewRefresh(fn) { state.refreshView = fn; }
-export function refreshActiveView() {
-  if (typeof state.refreshView === "function") state.refreshView();
 }
 
 // ---- Session persistence + protected-data hygiene ---------------------------
@@ -81,8 +74,9 @@ export function clearProtectedData(storage = localStorage) {
 
 export function signIn(user, storage = localStorage) {
   const previous = loadSession(storage);
-  // A different person on the same device must never inherit cached data.
-  if (previous && previous.userId !== user.id) clearProtectedData(storage);
+  // A different person on the same device must never inherit cached data —
+  // and an unreadable/tampered previous session proves nothing, so it wipes too.
+  if (!previous || previous.userId !== user.id) clearProtectedData(storage);
   state.session = { userId: user.id, name: user.name, role: user.role, title: user.title };
   try { storage.setItem(SESSION_KEY, JSON.stringify(state.session)); } catch { /* full */ }
   emit("auth", state.session);

@@ -47,7 +47,7 @@ CI (`.github/workflows/ci.yml`) runs the same on every push.
 | `docs/REQUIREMENTS.md` | Functional requirements |
 | `reference/` | Prior standalone reference pages (design-language origin) |
 | `site/` | Dated snapshot of the earlier chatgpt.site deployment |
-| `brand/` | Official logo |
+| `brand/` | Logo artwork (original + transparent crops), app icons, nature-scene backdrops |
 
 ## Roadmap
 
