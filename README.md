@@ -48,6 +48,7 @@ CI (`.github/workflows/ci.yml`) runs the same on every push.
 | `reference/` | Prior standalone reference pages (design-language origin) |
 | `site/` | Dated snapshot of the earlier chatgpt.site deployment |
 | `brand/` | Logo artwork (original + transparent crops), app icons, nature-scene backdrops |
+| `.claude/skills/` | Carved project skills: platform build, design language, audit loop, agent handoff — the reusable MBD methodology |
 
 ## Roadmap
 
