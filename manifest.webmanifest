@@ -1,0 +1,12 @@
+{
+  "name": "Smart Solutions · Operativa",
+  "short_name": "Operativa",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0D0D0D",
+  "theme_color": "#DD0426",
+  "lang": "hr",
+  "icons": [
+    { "src": "brand/smart-solutions-logo.png", "sizes": "any", "type": "image/png" }
+  ]
+}
