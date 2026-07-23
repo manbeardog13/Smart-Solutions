@@ -18,7 +18,10 @@ const VIEW_DEFS = [
   { key: "admin", route: "/admin", label: "Upravljanje", ic: "admin", load: () => import("./views/admin.js") },
 ];
 
-const MARK_SVG = `<svg viewBox="0 0 100 100" fill="none" aria-hidden="true"><g transform="rotate(45 50 50)"><rect x="17" y="17" width="66" height="66" stroke="currentColor" stroke-width="9"/><rect x="33" y="30" width="9" height="40" fill="currentColor"/><rect x="46" y="30" width="9" height="40" fill="currentColor"/><rect x="59" y="30" width="9" height="40" fill="currentColor"/></g></svg>`;
+// The real logo artwork (brand/, background removed). logo-fx adds the
+// masked sheen sweep + lift on hover; logo-idle breathes a soft red glow.
+const MARK_IMG = `<span class="logo-fx logo-mark-fx logo-idle"><img src="brand/logo-mark.png" alt=""></span>`;
+const WORD_IMG = `<span class="logo-fx logo-word-fx"><img src="brand/logo-word.png" alt="smart solutions"></span>`;
 
 // Utility shelf targets: real destinations, never a dead click.
 const SHELF_APPS = [
@@ -74,11 +77,11 @@ function renderGate() {
   const users = db.demoUsers();
   root.innerHTML = `
     <div class="gate">
-      <div class="gate-bg" style="background-image:url('catalogue/images/aquarea-lifestyle.jpg')"></div>
+      <div class="gate-bg"></div>
       ${themeButton()}
       <div class="login" role="dialog" aria-label="Prijava">
-        <div class="mark">${MARK_SVG}</div>
-        <h1>smart solutions</h1>
+        <div class="mark logo-fx logo-mark-fx logo-idle"><img src="brand/logo-mark.png" alt=""></div>
+        <div class="word">${WORD_IMG}</div>
         <p class="sub">Operativa · nadzor i upravljanje</p>
         <form id="login-form">
           <label for="lg-user">Korisničko ime</label>
@@ -140,7 +143,7 @@ function renderShell(freshLogin = false) {
       <div class="wash"></div>
       <aside class="rail" id="rail">
         <button class="brand" data-home aria-label="Na ploču">
-          <span class="mark">${MARK_SVG}</span><span class="wm">smart solutions</span>
+          <span class="mark">${MARK_IMG}</span><span class="wm-img">${WORD_IMG}</span>
         </button>
         <nav>
           ${nav.map((v) => `

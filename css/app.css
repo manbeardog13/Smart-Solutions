@@ -17,12 +17,21 @@
   --mono:ui-monospace,"SF Mono","Cascadia Mono",Consolas,monospace;
   --snap:cubic-bezier(.2,0,0,1); --t:.14s;
   --rail:72px; --rail-open:280px;
+  --r-card:20px; --r-ctl:14px;
+  --shadow-1:0 1px 2px rgba(15,18,20,.05), 0 10px 30px rgba(15,18,20,.08);
+  --shadow-2:0 2px 6px rgba(15,18,20,.07), 0 24px 60px rgba(15,18,20,.16);
+  --hairline:inset 0 1px 0 rgba(255,255,255,.55);
+  --bg-scene:url("../brand/bg-dawn.svg");
 }
 :root[data-theme="dark"]{
   --ink:#F4F4F4; --ink2:#B0B0B0; --ink3:#8C8C8C; --ink4:#4E4E4E; --ink5:#2C2C2C;
   --paper:#0D0D0D; --sunk:rgba(255,255,255,.06);
-  --glass:rgba(255,255,255,.045); --glass2:rgba(255,255,255,.07);
+  --glass:rgba(20,26,32,.42); --glass2:rgba(22,28,34,.58);
   --line:rgba(255,255,255,.11); --line2:rgba(255,255,255,.2);
+  --shadow-1:0 1px 2px rgba(0,0,0,.35), 0 10px 30px rgba(0,0,0,.45);
+  --shadow-2:0 2px 6px rgba(0,0,0,.4), 0 24px 60px rgba(0,0,0,.6);
+  --hairline:inset 0 1px 0 rgba(255,255,255,.09);
+  --bg-scene:url("../brand/bg-night.svg");
 }
 
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -37,55 +46,96 @@ a{color:var(--red);text-underline-offset:3px}
 ::selection{background:var(--red);color:#fff}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
-/* something for the glass to refract */
+/* nature behind everything: the glass has something real to refract. The
+   scene sits far back, heavily veiled by the paper tone, so content stays
+   calm while every frosted surface picks up depth. */
 .wash{position:fixed;inset:0;pointer-events:none;z-index:0;
-  background:radial-gradient(680px 460px at 88% -6%, rgba(221,4,38,.13), transparent 62%),
-             radial-gradient(560px 420px at 4% 104%, rgba(18,18,18,.10), transparent 60%)}
-:root[data-theme="dark"] .wash{
-  background:radial-gradient(680px 460px at 88% -6%, rgba(221,4,38,.20), transparent 62%),
-             radial-gradient(560px 420px at 4% 104%, rgba(255,255,255,.05), transparent 60%)}
+  background-image:var(--bg-scene);background-size:cover;background-position:center bottom;
+  opacity:.5}
+.wash::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,
+    color-mix(in srgb, var(--paper) 88%, transparent) 0%,
+    color-mix(in srgb, var(--paper) 62%, transparent) 46%,
+    color-mix(in srgb, var(--paper) 78%, transparent) 100%)}
+:root[data-theme="dark"] .wash{opacity:.6}
+
+/* ══ the real logo, animated ══ */
+.logo-fx{position:relative;display:inline-block;line-height:0;
+         transition:transform .22s var(--snap),filter .22s var(--snap)}
+.logo-fx img{display:block;width:100%;height:100%;object-fit:contain}
+.logo-fx::after{content:"";position:absolute;inset:0;opacity:0;pointer-events:none;
+  -webkit-mask:var(--logo-mask) center/contain no-repeat;
+          mask:var(--logo-mask) center/contain no-repeat;
+  background:linear-gradient(115deg,transparent 32%,rgba(255,255,255,.95) 50%,transparent 68%);
+  background-size:240% 100%;background-position:130% 0}
+.logo-fx:hover{transform:rotate(-3deg) scale(1.07);
+  filter:drop-shadow(0 6px 18px rgba(221,4,38,.35))}
+.logo-fx:hover::after,.logo-fx.shine::after{animation:sheen .9s var(--snap)}
+@keyframes sheen{0%{background-position:130% 0;opacity:1}100%{background-position:-40% 0;opacity:1}}
+.logo-mark-fx{--logo-mask:url("../brand/logo-mark.png")}
+.logo-full-fx{--logo-mask:url("../brand/logo-full.png")}
+.logo-word-fx{--logo-mask:url("../brand/logo-word.png")}
+.logo-idle img{animation:logo-idle 7s ease-in-out infinite}
+@keyframes logo-idle{0%,100%{filter:drop-shadow(0 0 0 rgba(221,4,38,0))}
+  50%{filter:drop-shadow(0 4px 16px rgba(221,4,38,.28))}}
 
 .meta{font-size:9px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:var(--ink3)}
 .d{font-family:var(--display);font-weight:900;text-transform:uppercase;letter-spacing:-.035em}
 
 /* ══ splash ══ */
 .splash{position:fixed;inset:0;z-index:100;display:grid;place-items:center;align-content:center;
-        gap:18px;background:var(--night);color:var(--red)}
-.splash-mark{width:96px;height:96px;animation:splash-in .7s var(--snap) both}
-.splash-mark svg{width:100%;height:100%;display:block}
-.splash-wordmark{font-family:var(--display);font-weight:900;font-size:22px;letter-spacing:-.05em;
-        text-transform:lowercase;color:#fff;animation:splash-in .7s var(--snap) .15s both}
+        gap:26px;background:#0b1220 url("../brand/bg-night.svg") center bottom/cover no-repeat}
+.splash::before{content:"";position:absolute;inset:0;
+  background:radial-gradient(60% 50% at 50% 42%, rgba(11,18,32,.0) 0%, rgba(11,18,32,.72) 100%)}
+.splash-mark{width:120px;height:118px;position:relative;animation:splash-in .8s var(--snap) both;
+  filter:drop-shadow(0 10px 34px rgba(221,4,38,.4))}
+.splash-mark img{width:100%;height:100%;object-fit:contain;display:block}
+.splash-word{width:min(230px,56vw);position:relative;animation:splash-in .8s var(--snap) .18s both;
+  filter:drop-shadow(0 4px 22px rgba(0,0,0,.5))}
+.splash-word img{width:100%;display:block}
 .splash.out{animation:splash-out .32s var(--snap) both}
-@keyframes splash-in{from{opacity:0;transform:scale(.86)}to{opacity:1;transform:none}}
+@keyframes splash-in{from{opacity:0;transform:scale(.85) translateY(10px)}to{opacity:1;transform:none}}
 @keyframes splash-out{to{opacity:0;visibility:hidden}}
 
-/* ══ login gate ══ */
-.gate{min-height:100dvh;display:grid;place-items:center;padding:24px;position:relative;z-index:1;
-      background:linear-gradient(160deg,rgba(221,4,38,.06),transparent 55%),var(--paper)}
-.gate-bg{position:fixed;inset:0;z-index:0;background-size:cover;background-position:center;
-         opacity:.14;filter:saturate(1.1)}
-.login{width:min(400px,94vw);background:var(--glass2);backdrop-filter:blur(28px) saturate(190%);
-       -webkit-backdrop-filter:blur(28px) saturate(190%);border:1px solid var(--line);
-       border-radius:18px;padding:30px 26px;position:relative;z-index:1;
+/* ══ login gate — nature scene, fogged glass card, soft light shaft ══ */
+.gate{min-height:100dvh;display:grid;place-items:center;padding:24px;position:relative;z-index:1}
+.gate-bg{position:fixed;inset:0;z-index:0;background-image:var(--bg-scene);
+         background-size:cover;background-position:center bottom}
+.gate-bg::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,
+    color-mix(in srgb, var(--paper) 18%, transparent) 0%,
+    transparent 45%,
+    color-mix(in srgb, var(--paper) 34%, transparent) 100%)}
+.login{width:min(408px,94vw);background:var(--glass2);
+       backdrop-filter:blur(42px) saturate(180%);-webkit-backdrop-filter:blur(42px) saturate(180%);
+       border:1px solid var(--line);border-radius:26px;padding:32px 28px;position:relative;z-index:1;
+       overflow:hidden;box-shadow:var(--shadow-2),var(--hairline);
        animation:card-in .4s var(--snap) both}
+/* the light shaft: a soft diagonal beam falling across the frost */
+.login::before{content:"";position:absolute;top:-70%;right:-24%;width:52%;height:240%;
+  transform:rotate(24deg);pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.16) 45%,rgba(255,255,255,.05) 60%,transparent)}
+:root[data-theme="dark"] .login::before{
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.09) 45%,rgba(255,255,255,.03) 60%,transparent)}
 @keyframes card-in{from{opacity:0;transform:translateY(16px) scale(.98)}to{opacity:1;transform:none}}
-.login .mark{width:44px;height:44px;color:var(--red);margin:0 auto 10px}
-.login .mark svg{width:100%;height:100%}
-.login h1{font-family:var(--display);font-weight:900;font-size:19px;text-transform:lowercase;
-          letter-spacing:-.05em;text-align:center;margin:0 0 2px;color:var(--red)}
+.login .mark{display:block;width:64px;height:63px;margin:0 auto 14px}
+.login .word{display:block;width:168px;margin:0 auto 6px;text-align:center}
 .login .sub{text-align:center;margin:0 0 22px;font-size:12.5px;color:var(--ink3)}
 .login label{display:block;font-size:10px;font-weight:800;letter-spacing:.12em;
              text-transform:uppercase;color:var(--ink3);margin:14px 2px 5px}
-.login input{width:100%;background:var(--sunk);border:1px solid transparent;border-radius:11px;
-             padding:12px 14px;color:var(--ink);font-size:15px;font-family:inherit;outline:none;
-             transition:border-color .12s linear}
-.login input:focus{border-color:var(--red)}
+.login input{width:100%;background:var(--sunk);border:1px solid transparent;border-radius:var(--r-ctl);
+             padding:13px 15px;color:var(--ink);font-size:15px;font-family:inherit;outline:none;
+             box-shadow:inset 0 1px 2px rgba(15,18,20,.05);
+             transition:border-color .12s linear,background .12s linear}
+.login input:focus{border-color:var(--red);background:transparent}
 .btn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;padding:13px;
-     border-radius:12px;font-weight:800;font-size:14px;
-     transition:border-radius var(--t) var(--snap),background var(--t) linear,color var(--t) linear}
-.btn:hover{border-radius:6px}
-.btn-red{background:var(--red);color:#fff}
-.btn-red:hover{background:var(--red-d)}
+     border-radius:var(--r-ctl);font-weight:800;font-size:14px;
+     transition:border-radius var(--t) var(--snap),background var(--t) linear,color var(--t) linear,
+                box-shadow var(--t) linear,transform var(--t) var(--snap)}
+.btn:hover{border-radius:9px;transform:translateY(-1px)}
+.btn:active{transform:translateY(0) scale(.99)}
+.btn-red{background:var(--red);color:#fff;box-shadow:0 6px 20px rgba(221,4,38,.3),var(--hairline)}
+.btn-red:hover{background:var(--red-d);box-shadow:0 10px 28px rgba(221,4,38,.4)}
 .btn-ghost{background:var(--sunk);color:var(--ink2)}
 .btn-ghost:hover{color:var(--ink)}
 .login .aux{display:flex;justify-content:space-between;align-items:center;margin:10px 2px 18px;
@@ -100,7 +150,7 @@ a{color:var(--red);text-underline-offset:3px}
 .demo-user{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:11px;
            background:var(--sunk);text-align:left;
            transition:border-radius var(--t) var(--snap),background var(--t) linear}
-.demo-user:hover{border-radius:5px;background:var(--red-soft)}
+.demo-user:hover{background:var(--red-soft)}
 .demo-user .av{width:32px;height:32px;flex:0 0 32px;border-radius:50%;background:var(--night);
                color:#fff;display:grid;place-items:center;font-family:var(--display);font-size:12px}
 :root[data-theme="dark"] .demo-user .av{background:var(--red)}
@@ -110,7 +160,7 @@ a{color:var(--red);text-underline-offset:3px}
 /* theme slider */
 .theme{display:inline-flex;align-items:center;gap:9px;padding:7px 9px;border-radius:9px;
        transition:border-radius var(--t) var(--snap),background var(--t) linear}
-.theme:hover{border-radius:0;background:var(--sunk)}
+.theme:hover{background:var(--sunk)}
 .tr{width:44px;height:24px;flex:0 0 44px;border-radius:13px;background:var(--red);position:relative;
     box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
 .tr i{position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;
@@ -132,25 +182,23 @@ main{min-height:100dvh;padding-left:var(--rail);transition:padding-left .2s var(
       -webkit-backdrop-filter:blur(26px) saturate(190%);border-right:1px solid var(--line);
       transition:width .2s var(--snap)}
 .rail:hover,.rail.open,.rail:focus-within{width:var(--rail-open)}
-.rail .brand{display:flex;align-items:center;gap:10px;padding:6px 8px;margin-bottom:10px;
-             border-radius:10px;transition:border-radius var(--t) var(--snap),background var(--t) linear}
-.rail .brand:hover{border-radius:0;background:var(--sunk)}
-.rail .mark{width:32px;height:32px;flex:0 0 32px;color:var(--red)}
-.rail .mark svg{width:100%;height:100%;display:block;animation:logo-breathe 6s ease-in-out infinite}
-@keyframes logo-breathe{0%,100%{opacity:1}50%{opacity:.72}}
-.rail .wm{white-space:nowrap;font-family:var(--display);font-weight:900;font-size:13px;
-          letter-spacing:-.045em;text-transform:lowercase;color:var(--red);opacity:0;
-          transition:opacity .14s linear}
-.rail:hover .wm,.rail.open .wm,.rail:focus-within .wm{opacity:1}
+.rail .brand{display:flex;align-items:center;gap:11px;padding:6px 8px;margin-bottom:10px;
+             border-radius:12px;transition:background var(--t) linear}
+.rail .brand:hover{background:var(--sunk)}
+.rail .mark{width:34px;height:33px;flex:0 0 34px}
+.rail .mark .logo-fx{width:100%;height:100%}
+.wm-img{width:118px;flex:0 0 118px;opacity:0;transition:opacity .14s linear}
+.wm-img .logo-fx{width:100%}
+.rail:hover .wm-img,.rail.open .wm-img,.rail:focus-within .wm-img{opacity:1}
 .nl{display:flex;align-items:center;gap:12px;width:100%;min-height:48px;padding:0 15px;
     border-radius:10px;font-size:13.5px;font-weight:700;color:var(--ink2);position:relative;
     overflow:hidden;white-space:nowrap;
     transition:border-radius var(--t) var(--snap),background var(--t) linear,color var(--t) linear}
 .nl::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--red);
             transform:scaleY(0);transform-origin:top;transition:transform var(--t) var(--snap)}
-.nl:hover{border-radius:0;background:var(--sunk);color:var(--ink)}
+.nl:hover{background:var(--sunk);color:var(--ink)}
 .nl:hover::before{transform:scaleY(1)}
-.nl.on{border-radius:0;background:var(--night);color:#fff}
+.nl.on{background:var(--night);color:#fff}
 :root[data-theme="dark"] .nl.on{background:var(--red)}
 .nl.on::before{transform:scaleY(1)}
 :root[data-theme="dark"] .nl.on::before{background:#fff}
@@ -163,7 +211,7 @@ main{min-height:100dvh;padding-left:var(--rail);transition:padding-left .2s var(
 .rail .acct{display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;
             background:var(--sunk);white-space:nowrap;overflow:hidden;
             transition:border-radius var(--t) var(--snap)}
-.rail .acct:hover{border-radius:0}
+.rail .acct:hover{background:var(--glass2)}
 .rail .av{width:30px;height:30px;flex:0 0 30px;border-radius:50%;background:var(--night);color:#fff;
           display:grid;place-items:center;font-family:var(--display);font-size:11px}
 :root[data-theme="dark"] .rail .av{background:var(--red)}
@@ -188,13 +236,16 @@ main{min-height:100dvh;padding-left:var(--rail);transition:padding-left .2s var(
 .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px}
 @media(max-width:1100px){.cards{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:520px){.cards{grid-template-columns:1fr}}
-.card{background:var(--glass);backdrop-filter:blur(24px) saturate(190%);
-      -webkit-backdrop-filter:blur(24px) saturate(190%);border:1px solid var(--line);
-      border-radius:14px;padding:16px;position:relative;overflow:hidden;
-      transition:border-radius var(--t) var(--snap),border-color var(--t) linear}
+.card{background:var(--glass);backdrop-filter:blur(28px) saturate(180%);
+      -webkit-backdrop-filter:blur(28px) saturate(180%);border:1px solid var(--line);
+      border-radius:var(--r-card);padding:18px;position:relative;overflow:hidden;
+      box-shadow:var(--shadow-1),var(--hairline);
+      transition:border-radius var(--t) var(--snap),border-color var(--t) linear,
+                 box-shadow var(--t) linear}
+.card:hover{box-shadow:var(--shadow-2),var(--hairline)}
 .card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--red);
               transform:scaleY(0);transform-origin:top;transition:transform var(--t) var(--snap)}
-.card:hover{border-radius:0;border-color:var(--line2)}
+.card:hover{border-color:var(--line2)}
 .card:hover::before{transform:scaleY(1)}
 .card .v{font-family:var(--display);font-weight:900;font-size:36px;letter-spacing:-.05em;
          line-height:.95;margin-top:7px;font-variant-numeric:tabular-nums}
@@ -207,10 +258,10 @@ main{min-height:100dvh;padding-left:var(--rail);transition:padding-left .2s var(
 .deal .card.from-right{--fly: 46px}
 @keyframes deal{from{opacity:0;transform:translateX(var(--fly,0)) scale(.96)}to{opacity:1;transform:none}}
 
-.panel{background:var(--glass);backdrop-filter:blur(24px) saturate(190%);
-       -webkit-backdrop-filter:blur(24px) saturate(190%);border:1px solid var(--line);
-       border-radius:14px;overflow:hidden;margin-bottom:12px;
-       transition:border-radius var(--t) var(--snap)}
+.panel{background:var(--glass);backdrop-filter:blur(28px) saturate(180%);
+       -webkit-backdrop-filter:blur(28px) saturate(180%);border:1px solid var(--line);
+       border-radius:var(--r-card);overflow:hidden;margin-bottom:12px;
+       box-shadow:var(--shadow-1),var(--hairline)}
 .panel .ph{padding:14px 16px 10px;display:flex;align-items:center;gap:10px}
 .panel .ph h2{font-family:var(--display);font-weight:900;font-size:12.5px;text-transform:uppercase;
               letter-spacing:-.02em;margin:0}
@@ -245,14 +296,14 @@ main{min-height:100dvh;padding-left:var(--rail);transition:padding-left .2s var(
                transition:opacity var(--t) linear}
 .shelf:hover .handle,.shelf:focus-within .handle{opacity:0}
 .shelf .capsule{display:flex;flex-direction:column;gap:6px;padding:10px 8px;margin-right:-84px;
-        border-radius:16px 0 0 16px;background:var(--glass2);border:1px solid var(--line);
+        border-radius:18px 0 0 18px;background:var(--glass2);border:1px solid var(--line);box-shadow:var(--shadow-2);
         border-right:0;backdrop-filter:blur(26px) saturate(190%);
         -webkit-backdrop-filter:blur(26px) saturate(190%);
         transition:margin-right .2s var(--snap)}
 .shelf:hover .capsule,.shelf:focus-within .capsule{margin-right:0}
 .shelf a{display:grid;place-items:center;width:46px;height:46px;border-radius:12px;color:var(--ink3);
          transition:border-radius var(--t) var(--snap),background var(--t) linear,color var(--t) linear}
-.shelf a:hover{border-radius:6px;background:var(--sunk);color:var(--brand,var(--ink))}
+.shelf a:hover{background:var(--sunk);color:var(--brand,var(--ink))}
 .shelf svg{width:21px;height:21px}
 
 /* ══ big-controls mode (majstor / field role) ══ */
@@ -272,7 +323,7 @@ main{min-height:100dvh;padding-left:var(--rail);transition:padding-left .2s var(
 .scrim{position:fixed;inset:0;z-index:60;background:rgba(18,18,18,.4);backdrop-filter:blur(3px);
        display:grid;place-items:center;padding:20px;animation:fade .16s linear both}
 @keyframes fade{from{opacity:0}}
-.modal{width:min(420px,94vw);background:var(--glass2);backdrop-filter:blur(30px) saturate(190%);
+.modal{width:min(420px,94vw);background:var(--glass2);backdrop-filter:blur(38px) saturate(180%);box-shadow:var(--shadow-2),var(--hairline);
        -webkit-backdrop-filter:blur(30px) saturate(190%);border:1px solid var(--line2);
        border-radius:16px;padding:22px;animation:card-in .22s var(--snap) both}
 .modal h2{font-family:var(--display);font-weight:900;font-size:15px;text-transform:uppercase;

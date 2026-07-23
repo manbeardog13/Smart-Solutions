@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f4ede6"/>
+      <stop offset=".5" stop-color="#f0e3da"/>
+      <stop offset="1" stop-color="#e4dcd6"/>
+    </linearGradient>
+    <linearGradient id="m1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#cbb9ad"/><stop offset="1" stop-color="#bba99e"/>
+    </linearGradient>
+    <linearGradient id="m2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#b3a094"/><stop offset="1" stop-color="#a08d81"/>
+    </linearGradient>
+    <linearGradient id="m3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#93806f"/><stop offset="1" stop-color="#7d6a5c"/>
+    </linearGradient>
+    <linearGradient id="fog" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f7f1ea" stop-opacity="0"/>
+      <stop offset="1" stop-color="#f7f1ea" stop-opacity=".55"/>
+    </linearGradient>
+    <radialGradient id="sun" cx=".7" cy=".24" r=".42">
+      <stop offset="0" stop-color="#ffd9c4" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#ffd9c4" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#sky)"/>
+  <rect width="1600" height="1000" fill="url(#sun)"/>
+  <path fill="url(#m1)" d="M0 620 L210 460 L360 560 L560 370 L740 540 L880 460 L1060 600 L1300 480 L1600 570 L1600 1000 L0 1000 Z" opacity=".7"/>
+  <rect y="500" width="1600" height="500" fill="url(#fog)"/>
+  <path fill="url(#m2)" d="M0 740 L250 600 L430 690 L650 530 L870 700 L1080 590 L1300 730 L1470 650 L1600 710 L1600 1000 L0 1000 Z" opacity=".82"/>
+  <rect y="620" width="1600" height="380" fill="url(#fog)"/>
+  <path fill="url(#m3)" d="M0 870 L210 770 L440 850 L670 730 L920 860 L1160 770 L1410 880 L1600 810 L1600 1000 L0 1000 Z" opacity=".9"/>
+  <rect y="750" width="1600" height="250" fill="url(#fog)"/>
+</svg>
