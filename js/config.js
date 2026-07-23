@@ -20,3 +20,13 @@ export function isConfigured() {
     !config.SUPABASE_ANON_KEY.includes("YOUR_")
   );
 }
+
+// The base URL baked into printed QR stickers. Stickers outlive hosting
+// setups, so prefer the deployment the app is actually served from over the
+// hardcoded constant; the constant remains the fallback for file:// and tests.
+export function appBaseUrl() {
+  if (typeof location !== "undefined" && /^https?:$/.test(location.protocol)) {
+    return location.origin + location.pathname.replace(/[^/]*$/, "");
+  }
+  return config.APP_BASE_URL;
+}

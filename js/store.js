@@ -46,10 +46,26 @@ export function refreshActiveView() {
 
 // ---- Session persistence + protected-data hygiene ---------------------------
 
+// A session blob is only trusted if it still has the exact shape we write —
+// tampered or schema-drifted values must not reach role gating or rendering.
+function isValidSession(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value) &&
+    typeof value.userId === "string" && value.userId.length > 0 &&
+    typeof value.name === "string" && value.name.length > 0 &&
+    typeof value.role === "string" && typeof value.title === "string";
+}
+
 export function loadSession(storage = localStorage) {
-  try {
-    state.session = JSON.parse(storage.getItem(SESSION_KEY)) ?? null;
-  } catch { state.session = null; }
+  let parsed = null;
+  try { parsed = JSON.parse(storage.getItem(SESSION_KEY)); } catch { /* invalid JSON */ }
+  if (isValidSession(parsed)) {
+    state.session = parsed;
+  } else {
+    state.session = null;
+    if (parsed !== null && parsed !== undefined) {
+      try { storage.removeItem(SESSION_KEY); } catch { /* ignore */ }
+    }
+  }
   return state.session;
 }
 

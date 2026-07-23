@@ -3,7 +3,7 @@
 // ============================================================================
 import * as db from "../db.js";
 import { lowStockItems, dealDelays } from "../domain.js";
-import { esc, icon, go } from "../ui.js";
+import { esc, icon } from "../ui.js";
 
 export function render(main, ctx) {
   const items = db.listItems();
@@ -57,7 +57,8 @@ export function render(main, ctx) {
         </div>`).join("")}
     </div>`;
 
+  // Attention rows deep-link to the exact item, same as a scanned sticker.
   main.querySelectorAll("[data-goto-item]").forEach((b) => {
-    b.onclick = () => go("/warehouse");
+    b.onclick = () => { location.hash = "#/item/" + encodeURIComponent(b.dataset.gotoItem); };
   });
 }

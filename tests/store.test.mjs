@@ -62,3 +62,21 @@ test("clearProtectedData reports how many keys it removed", () => {
   const s = fakeStorage({ "ss.protected.a": "1", "ss.gemini.b": "2", "other": "3" });
   assert.equal(clearProtectedData(s), 2);
 });
+
+test("tampered or schema-drifted session blobs are rejected and removed", () => {
+  for (const bad of ['"just a string"', "[1,2]", "42", "{}",
+    '{"userId":"u","name":"","role":"x","title":"y"}',
+    '{"name":"Vido","role":"vlasnik","title":"Vlasnik"}']) {
+    const s = fakeStorage({ "ss.session": bad });
+    assert.equal(loadSession(s), null, `accepted: ${bad}`);
+    assert.equal(s.getItem("ss.session"), null, `not removed: ${bad}`);
+  }
+});
+
+test("a well-formed persisted session still loads", () => {
+  const s = fakeStorage();
+  signIn(vido, s);
+  const raw = s.getItem("ss.session");
+  const fresh = fakeStorage({ "ss.session": raw });
+  assert.equal(loadSession(fresh).userId, "u-vido");
+});

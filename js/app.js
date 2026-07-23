@@ -39,10 +39,19 @@ const root = document.getElementById("app-root");
 const THEME_KEY = "ss.theme";
 
 // ---- Theme ------------------------------------------------------------------
+function isDark() {
+  return document.documentElement.getAttribute("data-theme") === "dark";
+}
 function applyTheme(dark) {
   document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
   setThemeColor(dark);
   setState({ theme: dark ? "dark" : "light" });
+  syncThemeControls();
+}
+// Theme switches are injected by innerHTML renders; whoever renders one calls
+// this so the control always reports the live theme (aria + label).
+function syncThemeControls() {
+  const dark = isDark();
   document.querySelectorAll(".theme").forEach((el) => {
     el.setAttribute("aria-checked", String(dark));
     const lbl = el.querySelector(".lbl");
@@ -110,6 +119,7 @@ function renderGate() {
       </div>
     </div>`;
 
+  syncThemeControls();
   const soon = () => import("./ui.js").then(({ toast }) =>
     toast("Dostupno s produkcijskim backendom (Supabase)."));
   root.querySelector("[data-google]").onclick = soon;
@@ -120,7 +130,16 @@ function renderGate() {
     btn.onclick = () => {
       const user = db.demoUsers().find((u) => u.id === btn.dataset.user);
       signIn(user);
-      renderShell(true);
+      // Continuous transition, not a hard cut: the gate glides out, the
+      // dashboard deals in. Reduced motion goes straight to the shell.
+      const gate = root.querySelector(".gate");
+      const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (reduce || !gate) { renderShell(true); return; }
+      gate.classList.add("out");
+      let done = false;
+      const finish = () => { if (!done) { done = true; renderShell(true); } };
+      gate.addEventListener("animationend", finish, { once: true });
+      setTimeout(finish, 380); // safety: never strand the user on the gate
     };
   });
 }
@@ -133,17 +152,25 @@ function navForSession(session) {
   return VIEW_DEFS.filter((v) => allowed.includes(v.key));
 }
 
+const PIN_KEY = "ss.railPinned";
+
 function renderShell(freshLogin = false) {
   const { session } = getState();
   if (!session) { renderGate(); return; }
   document.body.classList.toggle("field-mode", isFieldRole(session.role));
   const nav = navForSession(session);
+  let pinned = false;
+  try { pinned = JSON.parse(localStorage.getItem(PIN_KEY)) === true; } catch { /* default */ }
   root.innerHTML = `
-    <div class="shell">
+    <div class="shell ${pinned ? "pinned" : ""}">
       <div class="wash"></div>
-      <aside class="rail" id="rail">
+      <aside class="rail ${pinned ? "open" : ""}" id="rail">
         <button class="brand" data-home aria-label="Na ploču">
           <span class="mark">${MARK_IMG}</span><span class="wm-img">${WORD_IMG}</span>
+        </button>
+        <button class="nl pin" data-pin aria-pressed="${pinned}"
+                title="${pinned ? "Otkvači izbornik" : "Zakvači izbornik"}">
+          ${icon("pin")}<span class="txt">${pinned ? "Otkvači" : "Zakvači"}</span>
         </button>
         <nav>
           ${nav.map((v) => `
@@ -160,48 +187,123 @@ function renderShell(freshLogin = false) {
       </aside>
       <main>
         <div class="top">
-          <h1 id="page-title">Ploča</h1>
+          <h1 id="page-title" tabindex="-1">Ploča</h1>
           ${db.isLive() ? "" : '<span class="demo-badge">Demo</span>'}
-          <div class="right"></div>
+          <div class="right">
+            <span class="top-mini">${themeButton()}</span>
+            <button class="top-mini top-logout" data-logout-top aria-label="Odjava">${icon("logout")}</button>
+          </div>
         </div>
         <div class="stage" id="main"></div>
       </main>
-      <div class="shelf" id="shelf" tabindex="0" aria-label="Brze aplikacije">
+      <div class="shelf" id="shelf">
         <div class="capsule">
           ${SHELF_APPS.map((a) => `
             <a href="${a.url}" target="_blank" rel="noopener" aria-label="${esc(a.name)}"
                style="--brand:${a.brand}">${a.svg}</a>`).join("")}
         </div>
-        <div class="handle" aria-hidden="true"></div>
+        <button class="handle" data-shelf-toggle aria-expanded="false"
+                aria-label="Brze aplikacije"></button>
       </div>
     </div>`;
 
   currentMain = document.getElementById("main");
+  syncThemeControls();
+  const logout = () => { closeScrims(); signOut(); renderGate(); };
   root.querySelector("[data-home]").onclick = () => go("/");
-  root.querySelector("[data-logout]").onclick = () => { signOut(); renderGate(); };
+  root.querySelector("[data-logout]").onclick = logout;
+  root.querySelector("[data-logout-top]").onclick = logout;
+
+  // Pin: clicking keeps the rail open and the stage makes room (spec).
+  const rail = document.getElementById("rail");
+  const shellEl = root.querySelector(".shell");
+  root.querySelector("[data-pin]").onclick = (e) => {
+    const now = !shellEl.classList.contains("pinned");
+    shellEl.classList.toggle("pinned", now);
+    rail.classList.toggle("open", now);
+    e.currentTarget.setAttribute("aria-pressed", String(now));
+    e.currentTarget.querySelector(".txt").textContent = now ? "Otkvači" : "Zakvači";
+    e.currentTarget.title = now ? "Otkvači izbornik" : "Zakvači izbornik";
+    try { localStorage.setItem(PIN_KEY, JSON.stringify(now)); } catch { /* fine */ }
+  };
+
+  // Nav. On touch (no hover) the first tap opens the menu, the second selects.
+  const touchOnly = matchMedia("(hover: none)").matches;
   root.querySelectorAll("[data-route]").forEach((btn) => {
-    btn.onclick = () => go(btn.dataset.route);
+    btn.onclick = () => {
+      const phone = document.body.classList.contains("phone");
+      if (touchOnly && !phone && !rail.classList.contains("open")) {
+        rail.classList.add("open");
+        return;
+      }
+      if (touchOnly && !shellEl.classList.contains("pinned")) rail.classList.remove("open");
+      go(btn.dataset.route);
+    };
   });
+  if (touchOnly) {
+    document.addEventListener("pointerdown", (e) => {
+      if (!rail.contains(e.target) && !shellEl.classList.contains("pinned")) {
+        rail.classList.remove("open");
+      }
+    }, { passive: true });
+  }
+
+  // Shelf: the handle is a real button, so touch and keyboard both work.
+  const shelf = document.getElementById("shelf");
+  const handle = root.querySelector("[data-shelf-toggle]");
+  handle.onclick = () => {
+    const open = shelf.classList.toggle("open");
+    handle.setAttribute("aria-expanded", String(open));
+  };
+
   route(freshLogin);
 }
 
+// Body-level overlays (reorder scrims) must never outlive the view or the
+// session that opened them.
+function closeScrims() {
+  document.querySelectorAll(".scrim").forEach((s) => s.remove());
+}
+
 // ---- Router -----------------------------------------------------------------
+// routeSeq guards against the async race: two rapid hash changes both await
+// their dynamic imports, and without the token the slower (stale) view would
+// win the innerHTML write. Only the newest sequence may render.
+let routeSeq = 0;
+
 async function route(freshLogin = false) {
   const { session } = getState();
   if (!session) { renderGate(); return; }
+  closeScrims();
+  const seq = ++routeSeq;
   const hash = location.hash.replace(/^#/, "") || "/";
   const nav = navForSession(session);
+  const itemMatch = hash.match(/^\/item\/([^/?]+)/);
   const def = nav.find((v) => v.route === hash) ||
-              (hash.startsWith("/item/") ? nav.find((v) => v.key === "warehouse") : null) ||
+              (itemMatch ? nav.find((v) => v.key === "warehouse") : null) ||
               nav[0];
+  // Normalize unknown or disallowed hashes so the URL never lies about the view.
+  if (hash !== def.route && !itemMatch) {
+    history.replaceState(null, "", "#" + def.route);
+  }
   setState({ route: def.route });
   document.querySelectorAll(".nl[data-route]").forEach((b) =>
     b.classList.toggle("on", b.dataset.route === def.route));
   const title = document.getElementById("page-title");
   if (title) title.textContent = def.label;
   const mod = await def.load();
+  if (seq !== routeSeq || getState().session !== session) return; // superseded
   currentMain.innerHTML = "";
-  mod.render(currentMain, { session, hash, freshLogin });
+  mod.render(currentMain, {
+    session, hash, freshLogin,
+    itemId: itemMatch ? decodeSafe(itemMatch[1]) : null,
+  });
+  // Keyboard/screen-reader users land on the new view's title, not in limbo.
+  if (!freshLogin && title) title.focus({ preventScroll: true });
+}
+
+function decodeSafe(part) {
+  try { return decodeURIComponent(part); } catch { return part; }
 }
 
 // ---- Boot -------------------------------------------------------------------

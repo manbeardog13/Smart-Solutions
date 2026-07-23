@@ -24,6 +24,18 @@ test("admin override changes what a role can see", () => {
   assert.equal(canSee("majstor", "scan", override), true);
 });
 
+test("an empty or invalid override can never lock a role out", () => {
+  assert.deepEqual(viewsForRole("majstor", { majstor: [] }), DEFAULT_VISIBILITY.majstor);
+  assert.deepEqual(viewsForRole("skladistar", { skladistar: "corrupt" }), DEFAULT_VISIBILITY.skladistar);
+  assert.deepEqual(viewsForRole("majstor", {}), DEFAULT_VISIBILITY.majstor);
+});
+
+test("the dashboard is always reachable even if unticked", () => {
+  const views = viewsForRole("majstor", { majstor: ["scan"] });
+  assert.ok(views.includes("dashboard"));
+  assert.ok(views.includes("scan"));
+});
+
 test("only majstor is a field role (big-controls UI)", () => {
   assert.equal(isFieldRole("majstor"), true);
   assert.equal(isFieldRole("vlasnik"), false);
@@ -67,6 +79,11 @@ test("QR payload is a URL carrying item id and supplier; parse round-trips", () 
 test("parse tolerates payloads without supplier and rejects garbage", () => {
   assert.deepEqual(parseQrPayload("https://x/#/item/AB-1"), { itemId: "AB-1", supplier: null });
   assert.equal(parseQrPayload("hello world"), null);
+});
+
+test("hostile QR input with malformed percent-encoding returns null, never throws", () => {
+  assert.equal(parseQrPayload("https://x/#/item/%"), null);
+  assert.equal(parseQrPayload("https://x/#/item/AB-1?s=%E0%A4%A"), null);
 });
 
 // ---- device classes ---------------------------------------------------------

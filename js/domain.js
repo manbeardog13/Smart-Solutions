@@ -17,7 +17,13 @@ export const DEFAULT_VISIBILITY = {
 
 export function viewsForRole(role, visibility = DEFAULT_VISIBILITY) {
   if (role === "vlasnik") return DEFAULT_VISIBILITY.vlasnik.slice();
-  return (visibility[role] || []).slice();
+  const views = visibility[role];
+  // An empty or invalid override must never lock a role out of the app —
+  // fall back to the defaults, and guarantee the dashboard is always there.
+  if (!Array.isArray(views) || views.length === 0) {
+    return (DEFAULT_VISIBILITY[role] || ["dashboard"]).slice();
+  }
+  return views.includes("dashboard") ? views.slice() : ["dashboard", ...views];
 }
 
 export function canSee(role, view, visibility = DEFAULT_VISIBILITY) {
@@ -66,10 +72,16 @@ export function qrPayload(item, baseUrl) {
 export function parseQrPayload(text) {
   const m = String(text).match(/#\/item\/([^?]+)(?:\?s=([^&]+))?/);
   if (!m) return null;
-  return {
-    itemId: decodeURIComponent(m[1]),
-    supplier: m[2] ? decodeURIComponent(m[2]) : null,
-  };
+  // Real stickers arrive from cameras — malformed percent-encoding must
+  // degrade to "not a valid sticker", never throw.
+  try {
+    return {
+      itemId: decodeURIComponent(m[1]),
+      supplier: m[2] ? decodeURIComponent(m[2]) : null,
+    };
+  } catch {
+    return null;
+  }
 }
 
 // ---- Device classes ---------------------------------------------------------

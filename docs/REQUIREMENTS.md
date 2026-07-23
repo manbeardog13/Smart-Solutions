@@ -50,7 +50,10 @@ minimalism.
 ## Splash, device adaptation, and dashboard entrance
 
 - On launch: splash screen with the logo, then the logon card, with a
-  picture behind (catalogue photography).
+  picture behind. (Owner direction, 2026-07-23: the backdrop is beautiful
+  nature scenery with fogged glass — not catalogue product photography.
+  The catalogue remains the authoritative source for product imagery
+  inside the app.)
 - The application must always know what device it is on: mobile adjusts
   for mobile, tablet for tablet.
 - Desktop must know the monitor dimensions and use the whole browser

@@ -7,7 +7,7 @@
 
 :root{
   --red:#DD0426; --red-d:#B00320; --red-soft:rgba(221,4,38,.08); --night:#121212;
-  --ink:#121212; --ink2:#4F4F4F; --ink3:#6B6B6B; --ink4:#BDBDBD; --ink5:#E4E4E4;
+  --ink:#121212; --ink2:#4F4F4F; --ink3:#6B6B6B; --ink4:#8A8A8A; --ink5:#E4E4E4;
   --paper:#F7F7F6; --sunk:rgba(18,18,18,.05);
   --glass:rgba(255,255,255,.58); --glass2:rgba(255,255,255,.74);
   --line:rgba(18,18,18,.10); --line2:rgba(18,18,18,.2);
@@ -15,7 +15,7 @@
             "Segoe UI",Roboto,system-ui,sans-serif;
   --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",system-ui,sans-serif;
   --mono:ui-monospace,"SF Mono","Cascadia Mono",Consolas,monospace;
-  --snap:cubic-bezier(.2,0,0,1); --t:.14s;
+  --snap:cubic-bezier(.2,0,0,1); --t:.2s;
   --rail:72px; --rail-open:280px;
   --r-card:20px; --r-ctl:14px;
   --shadow-1:0 1px 2px rgba(15,18,20,.05), 0 10px 30px rgba(15,18,20,.08);
@@ -24,7 +24,7 @@
   --bg-scene:url("../brand/bg-dawn.svg");
 }
 :root[data-theme="dark"]{
-  --ink:#F4F4F4; --ink2:#B0B0B0; --ink3:#8C8C8C; --ink4:#4E4E4E; --ink5:#2C2C2C;
+  --ink:#F4F4F4; --ink2:#B0B0B0; --ink3:#8C8C8C; --ink4:#757575; --ink5:#2C2C2C;
   --paper:#0D0D0D; --sunk:rgba(255,255,255,.06);
   --glass:rgba(20,26,32,.42); --glass2:rgba(22,28,34,.58);
   --line:rgba(255,255,255,.11); --line2:rgba(255,255,255,.2);
@@ -73,7 +73,6 @@ a{color:var(--red);text-underline-offset:3px}
 .logo-fx:hover::after,.logo-fx.shine::after{animation:sheen .9s var(--snap)}
 @keyframes sheen{0%{background-position:130% 0;opacity:1}100%{background-position:-40% 0;opacity:1}}
 .logo-mark-fx{--logo-mask:url("../brand/logo-mark.png")}
-.logo-full-fx{--logo-mask:url("../brand/logo-full.png")}
 .logo-word-fx{--logo-mask:url("../brand/logo-word.png")}
 .logo-idle img{animation:logo-idle 7s ease-in-out infinite}
 @keyframes logo-idle{0%,100%{filter:drop-shadow(0 0 0 rgba(221,4,38,0))}
@@ -284,35 +283,68 @@ main{min-height:100dvh;padding-left:var(--rail);transition:padding-left .2s var(
 .badge-low{font-size:8px;font-weight:900;letter-spacing:.1em;padding:2.5px 6px;background:var(--red);
            color:#fff;text-transform:uppercase}
 .searchbar{margin:0 0 12px;display:flex;gap:9px}
-.searchbar input{flex:1;background:var(--glass2);border:1px solid var(--line);border-radius:12px;
+.searchbar input{flex:1;background:var(--glass2);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow-1);
                  padding:12px 15px;color:var(--ink);font-size:14.5px;font-family:inherit;outline:none;
-                 backdrop-filter:blur(18px);transition:border-color .12s linear}
+                 transition:border-color .12s linear}
 .searchbar input:focus{border-color:var(--red)}
 
 /* ══ right utility shelf — hidden capsule, revealed at the edge ══ */
 .shelf{position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:35;display:flex;
        align-items:center}
-.shelf .handle{width:5px;height:74px;border-radius:4px 0 0 4px;background:var(--red);opacity:.45;
+/* the handle is a real button: 44px touch/keyboard target with a slim visual */
+.shelf .handle{width:26px;height:88px;padding:0;border:0;background:none;position:relative;
+               cursor:pointer;display:block}
+.shelf .handle::after{content:"";position:absolute;right:0;top:50%;transform:translateY(-50%);
+               width:5px;height:74px;border-radius:4px 0 0 4px;background:var(--red);opacity:.45;
                transition:opacity var(--t) linear}
-.shelf:hover .handle,.shelf:focus-within .handle{opacity:0}
+.shelf:hover .handle::after,.shelf:focus-within .handle::after,
+.shelf.open .handle::after{opacity:0}
 .shelf .capsule{display:flex;flex-direction:column;gap:6px;padding:10px 8px;margin-right:-84px;
         border-radius:18px 0 0 18px;background:var(--glass2);border:1px solid var(--line);box-shadow:var(--shadow-2);
         border-right:0;backdrop-filter:blur(26px) saturate(190%);
         -webkit-backdrop-filter:blur(26px) saturate(190%);
         transition:margin-right .2s var(--snap)}
-.shelf:hover .capsule,.shelf:focus-within .capsule{margin-right:0}
+.shelf:hover .capsule,.shelf:focus-within .capsule,.shelf.open .capsule{margin-right:0}
 .shelf a{display:grid;place-items:center;width:46px;height:46px;border-radius:12px;color:var(--ink3);
          transition:border-radius var(--t) var(--snap),background var(--t) linear,color var(--t) linear}
 .shelf a:hover{background:var(--sunk);color:var(--brand,var(--ink))}
 .shelf svg{width:21px;height:21px}
 
-/* ══ big-controls mode (majstor / field role) ══ */
+/* ══ big-controls mode (majstor / field role): big buttons, big numbers,
+   big letters — including the secondary text a technician actually reads ══ */
 .field-mode .row{padding:16px}
-.field-mode .row .n{font-size:16px}
-.field-mode .row .big{font-size:20px}
+.field-mode .row .n{font-size:16.5px}
+.field-mode .row .big{font-size:21px}
+.field-mode .row .a{font-size:12px}
+.field-mode .row .ag{font-size:11px}
+.field-mode .meta{font-size:11px}
 .field-mode .btn{padding:17px;font-size:16.5px}
+.field-mode .btn-sq{min-width:52px;min-height:52px}
+.field-mode .searchbar input{padding:16px 18px;font-size:17px}
 .field-mode .card .v{font-size:44px}
 .field-mode .nl{min-height:54px;font-size:15px}
+
+/* ══ inline row actions — real touch targets ══ */
+.acts-inline{display:flex;gap:6px}
+.btn-sq{width:auto;min-width:44px;min-height:44px;padding:9px 13px}
+.btn-sq.wide{min-width:88px}
+.btn-sq:disabled{opacity:.55;cursor:default}
+
+/* ══ scanned-item detail ══ */
+.detail-img{width:84px;height:84px;flex:0 0 84px;border-radius:14px;object-fit:cover;
+            background:var(--sunk)}
+.a.warn{color:var(--red);font-weight:800}
+
+/* ══ top-bar compact controls (phones — the rail foot is hidden there) ══ */
+.top .right{margin-left:auto;display:flex;align-items:center;gap:6px}
+.top-mini{display:none}
+.top-logout{width:44px;height:44px;border-radius:12px;display:none;place-items:center;
+            background:var(--sunk);color:var(--ink2)}
+.top-logout:hover{color:var(--ink)}
+
+/* ══ rail pin control ══ */
+.nl.pin{min-height:40px;color:var(--ink3)}
+.nl.pin[aria-pressed="true"] .ic{color:var(--red)}
 
 /* ══ toast / modal ══ */
 .toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,16px);z-index:90;opacity:0;
@@ -339,7 +371,7 @@ main{min-height:100dvh;padding-left:var(--rail);transition:padding-left .2s var(
         align-items:center;gap:0;padding:4px 6px calc(4px + env(safe-area-inset-bottom));
         border-right:0;border-top:1px solid var(--line)}
   .rail:hover,.rail.open,.rail:focus-within{width:auto}
-  .rail .brand,.rail .foot,.rail .wm{display:none}
+  .rail .brand,.rail .foot{display:none}
   .rail nav{display:flex;flex:1;justify-content:space-around;width:100%}
   .nl{flex-direction:column;gap:3px;min-height:52px;padding:5px 8px;font-size:9px;flex:1;
       justify-content:center}
@@ -348,4 +380,17 @@ main{min-height:100dvh;padding-left:var(--rail);transition:padding-left .2s var(
   .shelf{display:none}
   .stage{padding:16px 14px 80px}
   .top{padding:12px 14px}
+  .nl.pin{display:none}
+  /* the rail foot is gone on phones — essential controls surface up top */
+  .top-mini{display:inline-flex}
+  .top-logout{display:grid}
+  /* fewer, cheaper blur layers on small GPUs */
+  .card,.panel{backdrop-filter:blur(14px) saturate(160%);
+               -webkit-backdrop-filter:blur(14px) saturate(160%)}
 }
+
+/* gate exit: the continuous login → dashboard transition */
+.gate.out{animation:gate-out .34s var(--snap) both}
+@keyframes gate-out{to{opacity:0;transform:scale(1.02)}}
+.gate.out .login{animation:login-out .3s var(--snap) both}
+@keyframes login-out{to{opacity:0;transform:translateY(-14px) scale(.985)}}

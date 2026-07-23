@@ -27,12 +27,17 @@ function load() {
     if (raw && raw.items) return raw;
   } catch { /* re-seed */ }
   const fresh = seed();
-  save(fresh);
+  try { save(fresh); } catch { /* boot must survive a full storage; run in-memory */ }
   return fresh;
 }
 
+// Persist or say so: a failed write must never let the UI report success.
 function save(db) {
-  try { localStorage.setItem(DB_KEY, JSON.stringify(db)); } catch { /* full */ }
+  try {
+    localStorage.setItem(DB_KEY, JSON.stringify(db));
+  } catch {
+    throw new Error("Spremanje nije uspjelo — pohrana uređaja je puna.");
+  }
 }
 
 export function demoUsers() { return DEMO_USERS; }
@@ -67,12 +72,20 @@ export function adjustQty(itemId, delta, who) {
   return item;
 }
 
+// Is there already an open (placed) order for this item?
+export function openReorderFor(itemId) {
+  return load().placedOrders.find((o) => o.itemId === itemId) || null;
+}
+
 // Place a reorder for a low-stock item. Requires the supplier (which is why
-// supplier identity travels in every QR payload).
+// supplier identity travels in every QR payload). One open order per item —
+// clicking twice must not order twice.
 export function placeReorder(itemId) {
   const db = load();
   const item = db.items.find((i) => i.id === itemId);
   if (!item) throw new Error("Artikl nije pronađen.");
+  const existing = db.placedOrders.find((o) => o.itemId === itemId);
+  if (existing) return existing;
   const proposal = reorderProposal(item);
   if (!proposal) throw new Error("Artikl nije ispod minimuma.");
   const order = { ...proposal, id: "N-" + Date.now(), placedAt: new Date().toISOString() };
