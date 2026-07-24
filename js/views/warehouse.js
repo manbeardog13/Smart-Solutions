@@ -145,6 +145,7 @@ function renderDetail(main, ctx) {
 
   target.innerHTML = `
     <div class="panel">
+      ${item.imgFull ? `<img class="p-img" src="${esc(item.imgFull)}" alt="">` : ""}
       <div class="ph">${icon("scan")}<h2>Skenirani artikl</h2>
         <span class="meta mono" style="margin-left:auto">${esc(item.id)}</span></div>
       <div class="row">

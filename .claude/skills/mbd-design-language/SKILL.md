@@ -52,46 +52,45 @@ Reference implementations: `css/app.css` (live tokens),
 
 ## Logon screen (hard standard — owner-locked, every MBD platform)
 
-Ported from ASC v2 (`asc/css/styles.css` "v2 auth shell" +
-`renderLogin/paintLogin` in `asc/js/app.js`); live at Smart Solutions
-`js/app.js renderGate()` + the login-gate section of `css/app.css`.
+Matches the ASC PHONE BUILD (the shipped app, not the repo's newer
+split-shell experiment — the owner compared screenshots and locked the
+card). Live at Smart Solutions `js/app.js renderGate()` + the
+login-gate section of `css/app.css`.
 
 - **Startup splash**: the brand mark ALONE (no wordmark), centered on
   the flat canvas with a small load bar (132×3px capsule, brand-color
   fill scaling in ~1s) — then the splash fades (~420 ms) and the gate's
-  entrance sequence begins. Splash shows only on first paint, never on
-  logout; skipped entirely under reduced motion.
-- **Split shell**: one opaque rounded container (36px), `min(880px,
-  100% − 32px)`, centered with `margin:auto` on a scrollable canvas.
-  White in light; solid anthracite (`#17181C`) in dark — matte, no
-  backdrop blur, no highlight ring, no light shafts, ever. Left half is
-  a near-black **stage** (`linear-gradient(175deg,#0B0C0E,#17181B)` —
-  darker than the dark shell so the split survives both themes); right
-  half is the form. Phones stack: compact stage on top.
-- **Stage**: brand logo ~50px tall (42px phone), top-left, **depth via a
-  brand-colored drop-shadow glow** (`drop-shadow(0 8px 22px
-  rgba(brand,.35))`); display-font headline with the second line in 60%
-  ink (`<br><span>`); one lead sentence, `max-width:34ch`; **chips replay
-  real cached counts** from the last dashboard visit — never fake
-  numbers; **corner notch tab** bottom-left: shell-colored label with two
-  18px inverted-radius bevels (`radial-gradient(circle at 100% 0%,
-  transparent 18px, shell 18.5px)`).
-- **Form side**: seg pill top-right on the canvas tone (theme dot: filled
-  = light, 2.5px inset ring = dark; plus HR/EN segments when i18n
-  exists); title + one quiet sub line; capsule (999px) fields 52px tall,
-  no leading icons, eye toggle inside; Google capsule on the canvas
-  tone, borderless; quiet lowercase divider with gradient hairlines;
-  lone right-aligned forgot link; **gradient capsule CTA**
-  (`linear-gradient(140deg, lighter, brand 55%, darker)`) with a quiet
-  glow (`0 12px 28px -12px rgba(brand,.30)`) and an arrow that slides
-  +3px on hover; centered create-account line.
-- **Backdrop**: stylised composition from the palette, never a photo —
-  grainy brand bloom top-left, blurred diagonal sash band, huge quiet
-  arc bottom-right, fine SVG-noise grain wash (.05), optional cursor
-  glow (transform-only, hidden on touch/reduced-motion). Everything
-  resolves from heavy blur on startup (`authBgIn` 1.5s); the shell
-  emerges once, blur-fade + 8px rise (620 ms); logo splash-fades. After
-  startup nothing on the gate animates.
+  entrance begins. NO glow behind the mark (a drop-shadow reads as a
+  colored box on the flat canvas). Splash shows only on first paint,
+  never on logout; skipped under reduced motion.
+- **One compact card**: `min(376px, 100% − 40px)`, `margin:auto`,
+  radius 28px, generous padding. Fully opaque and matte: white in
+  light, anthracite (`#1B1C20`) in dark — no backdrop blur, no
+  highlight ring, no light shafts, ever. Floats on a soft neutral
+  shadow. Inside, top row = brand logo (~128px wordmark) left + an
+  iOS-style theme switch right (52×32px, gray track, white knob, no
+  label, no edges).
+- **Copy**: bold title ("Dobrodošli natrag", ~26px/750), one quiet sub
+  line ("<Product> · <City>"). Nothing else. Less is more everywhere.
+- **Form order**: Google button (rounded-rect 16px, sunk tone, 1px
+  line, 52px) → uppercase divider ("ILI EMAIL", 11.5px, ls .14em) →
+  icon fields (rounded-rect 16px, sunk tone, 52px, leading mail/lock
+  icon at 15px, eye toggle in the password field) → right-aligned
+  semibold forgot link → **gradient CTA** (rounded-rect ~17px, 54px,
+  `linear-gradient(180deg, lighter, brand 58%, darker)`, soft glow
+  `0 16px 30px -10px rgba(brand,.42)`, inset top highlight, arrow that
+  slides +3px on hover) → centered "Prvi put? Napravi račun".
+- **Backdrop**: quiet stylised composition from the palette, never a
+  photo — faint brand bloom, blurred diagonal sash, huge quiet arc,
+  fine SVG grain (.05), optional cursor glow (transform-only, hidden on
+  touch/reduced-motion). Resolves from heavy blur on startup; the card
+  emerges once (blur-fade + 8px rise, 620 ms). After startup nothing on
+  the gate animates. Top edge fades into the status-bar strip so dark
+  mode runs behind the iPhone notch without a seam.
+- **In-app carryover**: the dark stage language (near-black gradient
+  panel, two-tone headline, corner notch tab with 18px inverted-radius
+  bevels, faded catalogue imagery) lives on the DASHBOARD HERO, not on
+  the logon.
 
 ## Accessibility floor (non-negotiable)
 
