@@ -10,8 +10,6 @@ export function render(main) {
   const items = new Map(db.listItems().map((i) => [i.id, i]));
   main.innerHTML = `
     <div class="panel tabbed">
-      <img class="p-cover" src="catalogue/images/catalogue-cover.jpg" alt="">
-      <span class="p-scrim" aria-hidden="true"></span>
       <h2 class="tab-tl">Nalozi</h2>
       <span class="tab-corner">${hrCount(orders.length, ["otvoren", "otvorena", "otvorenih"])}</span>
       ${orders.length === 0 ? `

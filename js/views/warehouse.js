@@ -21,12 +21,10 @@ export function render(main, ctx) {
       <input id="wh-q" placeholder="Traži artikl, šifru, dobavljača…" value="${esc(query)}"
              autocomplete="off" aria-label="Pretraga skladišta">
     </div>
-    <div class="panel tabbed roomy">
-      <img class="p-cover" src="catalogue/images/aquarea-lifestyle.jpg" alt="">
-      <span class="p-scrim" aria-hidden="true"></span>
+    <div class="panel tabbed corner">
       <h2 class="tab-tl">Skladište</h2>
       <span class="tab-corner" id="wh-count"></span>
-      <div id="wh-list"></div>
+      <div id="wh-list" class="icards"></div>
     </div>`;
 
   openDetail = ctx.itemId ? { itemId: ctx.itemId, hash: ctx.hash } : null;
@@ -49,7 +47,7 @@ function renderList(main, ctx) {
   main.querySelector("#wh-count").textContent = hrCount(items.length, ["artikl", "artikla", "artikala"]);
   const list = main.querySelector("#wh-list");
   list.innerHTML = items.length === 0
-    ? `<div class="row"><span class="b"><span class="n">Nema rezultata.</span></span></div>`
+    ? `<div class="icard"><div class="ic-top"><span class="ic-name">Nema rezultata.</span></div></div>`
     : items.map((it) => rowHTML(it)).join("");
   wireRowActions(list, main, ctx);
 }
@@ -88,12 +86,15 @@ function act(main, ctx, fn, itemId) {
 function rowHTML(it) {
   const ordered = db.openReorderFor(it.id);
   return `
-    <div class="row">
-      ${thumb(it)}
-      <span class="b"><span class="n">${esc(it.name)}</span></span>
-      <span class="rt"><span class="big${isLowStock(it) ? " low" : ""}">${esc(String(it.qty))}</span>
-        <span class="ag">min ${esc(String(it.min))}</span></span>
-      <span class="rt acts-inline">
+    <div class="icard">
+      ${it.imgFull ? `<img class="ic-bg" src="${esc(it.imgFull)}" alt="">
+      <span class="ic-scrim" aria-hidden="true"></span>` : ""}
+      <div class="ic-top">
+        <span class="ic-name">${esc(it.name)}</span>
+        <span class="ic-qty${isLowStock(it) ? " low" : ""}">${esc(String(it.qty))}
+          <em>min ${esc(String(it.min))}</em></span>
+      </div>
+      <div class="ic-acts">
         <input class="qin" data-q="${esc(it.id)}" type="number" min="1" value="1"
                inputmode="numeric" aria-label="Količina — ${esc(it.name)}">
         <button class="btn btn-ghost btn-sq" data-recv="${esc(it.id)}" aria-label="Zaprimi ${esc(it.name)}">+</button>
@@ -101,7 +102,7 @@ function rowHTML(it) {
         ${isLowStock(it) ? (ordered
           ? `<button class="btn btn-ghost btn-sq wide" disabled>Naručeno</button>`
           : `<button class="btn btn-red btn-sq wide" data-reorder="${esc(it.id)}">Naruči</button>`) : ""}
-      </span>
+      </div>
     </div>`;
 }
 
@@ -153,7 +154,7 @@ function renderDetail(main, ctx) {
   const proposal = low && !ordered ? reorderProposal(item) : null;
 
   target.innerHTML = `
-    <div class="panel tabbed">
+    <div class="panel tabbed corner">
       ${item.imgFull ? `<img class="p-cover" src="${esc(item.imgFull)}" alt="">
       <span class="p-scrim" aria-hidden="true"></span>` : ""}
       <h2 class="tab-tl">Skenirani artikl</h2>
