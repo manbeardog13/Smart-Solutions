@@ -113,7 +113,7 @@ export function openReorderFor(itemId) {
 // Place a reorder for a low-stock item. Requires the supplier (which is why
 // supplier identity travels in every QR payload). One open order per item —
 // clicking twice must not order twice.
-export function placeReorder(itemId) {
+export function placeReorder(itemId, quantity) {
   const db = load();
   const item = db.items.find((i) => i.id === itemId);
   if (!item) throw new Error("Artikl nije pronađen.");
@@ -121,7 +121,8 @@ export function placeReorder(itemId) {
   if (existing) return existing;
   const proposal = reorderProposal(item);
   if (!proposal) throw new Error("Artikl nije ispod minimuma.");
-  const order = { ...proposal, id: nextId("N-"), placedAt: new Date().toISOString() };
+  const qty = Number.isFinite(quantity) && quantity > 0 ? Math.floor(quantity) : proposal.quantity;
+  const order = { ...proposal, quantity: qty, id: nextId("N-"), placedAt: new Date().toISOString() };
   db.placedOrders.unshift(order);
   save(db);
   return order;

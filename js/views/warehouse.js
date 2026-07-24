@@ -21,9 +21,10 @@ export function render(main, ctx) {
       <input id="wh-q" placeholder="Traži artikl, šifru, dobavljača…" value="${esc(query)}"
              autocomplete="off" aria-label="Pretraga skladišta">
     </div>
-    <div class="panel">
-      <div class="ph">${icon("box")}<h2>Skladište</h2>
-        <span class="meta" style="margin-left:auto" id="wh-count"></span></div>
+    <div class="panel tabbed">
+      <img class="p-img" src="catalogue/images/aquarea-range.png" alt="">
+      <h2 class="tab-tl">Skladište</h2>
+      <span class="tab-corner" id="wh-count"></span>
       <div id="wh-list"></div>
     </div>`;
 
@@ -89,11 +90,13 @@ function rowHTML(it) {
     <div class="row">
       ${thumb(it)}
       <span class="b"><span class="n">${esc(it.name)}</span>
-        <span class="a">${esc(it.id)} · ${esc(it.sku)} · ${esc(it.loc)} · ${esc(it.supplier)}</span></span>
+        <span class="a">${esc(it.loc)}</span></span>
       ${isLowStock(it) ? '<span class="badge-low">Nisko</span>' : ""}
       <span class="rt"><span class="big">${esc(String(it.qty))}</span>
         <span class="ag">min ${esc(String(it.min))}</span></span>
       <span class="rt acts-inline">
+        <input class="qin" data-q="${esc(it.id)}" type="number" min="1" value="1"
+               inputmode="numeric" aria-label="Količina — ${esc(it.name)}">
         <button class="btn btn-ghost btn-sq" data-recv="${esc(it.id)}" aria-label="Zaprimi ${esc(it.name)}">+</button>
         <button class="btn btn-ghost btn-sq" data-issue="${esc(it.id)}" aria-label="Izdaj ${esc(it.name)}">−</button>
         ${isLowStock(it) ? (ordered
@@ -103,11 +106,18 @@ function rowHTML(it) {
     </div>`;
 }
 
+// The typed amount next to +/− applies in one go — no tapping one by one.
+function rowQty(scope, id) {
+  const q = scope.querySelector(`.qin[data-q="${CSS.escape(id)}"]`);
+  const n = q ? parseInt(q.value, 10) : 1;
+  return Number.isFinite(n) && n > 0 ? n : 1;
+}
+
 function wireRowActions(scope, main, ctx) {
   scope.querySelectorAll("[data-recv]").forEach((b) => b.onclick = () =>
-    act(main, ctx, () => db.adjustQty(b.dataset.recv, +1, ctx.session.name), b.dataset.recv));
+    act(main, ctx, () => db.adjustQty(b.dataset.recv, +rowQty(scope, b.dataset.recv), ctx.session.name), b.dataset.recv));
   scope.querySelectorAll("[data-issue]").forEach((b) => b.onclick = () =>
-    act(main, ctx, () => db.adjustQty(b.dataset.issue, -1, ctx.session.name), b.dataset.issue));
+    act(main, ctx, () => db.adjustQty(b.dataset.issue, -rowQty(scope, b.dataset.issue), ctx.session.name), b.dataset.issue));
   scope.querySelectorAll("[data-reorder]").forEach((b) => b.onclick = () => {
     // The row may be stale (another tab or the detail panel changed stock).
     const item = db.getItem(b.dataset.reorder);
@@ -128,7 +138,7 @@ function renderDetail(main, ctx) {
   const item = db.getItem(itemId);
   if (!item) {
     target.innerHTML = `
-      <div class="panel"><div class="ph">${icon("alert")}<h2>Nepoznata naljepnica</h2></div>
+      <div class="panel tabbed"><h2 class="tab-tl">Nepoznata naljepnica</h2>
         <div class="row"><span class="b"><span class="n">Artikl "${esc(itemId)}" ne postoji.</span>
           <span class="a">Provjeri naljepnicu ili potraži artikl pretragom.</span></span></div>
       </div>`;
@@ -144,14 +154,14 @@ function renderDetail(main, ctx) {
   const proposal = low && !ordered ? reorderProposal(item) : null;
 
   target.innerHTML = `
-    <div class="panel">
+    <div class="panel tabbed">
       ${item.imgFull ? `<img class="p-img" src="${esc(item.imgFull)}" alt="">` : ""}
-      <div class="ph">${icon("scan")}<h2>Skenirani artikl</h2>
-        <span class="meta mono" style="margin-left:auto">${esc(item.id)}</span></div>
+      <h2 class="tab-tl">Skenirani artikl</h2>
+      <span class="tab-corner mono">${esc(item.id)}</span>
       <div class="row">
         ${thumb(item, "detail-img")}
         <span class="b"><span class="n">${esc(item.name)}</span>
-          <span class="a">${esc(item.sku)} · lokacija ${esc(item.loc)} · dobavljač ${esc(item.supplier)}</span>
+          <span class="a">${esc(item.loc)} · ${esc(item.supplier)}</span>
           ${mismatch ? `<span class="a warn">⚠ Naljepnica navodi drugog dobavljača
             (${esc(stickerSupplier)}) — vrijedi podatak iz baze.</span>` : ""}</span>
         ${low ? '<span class="badge-low">Nisko</span>' : ""}
@@ -159,17 +169,23 @@ function renderDetail(main, ctx) {
           <span class="ag">na stanju · min ${esc(String(item.min))}</span></span>
       </div>
       <div class="row" style="gap:8px">
-        <button class="btn btn-ghost" data-d-recv>Zaprimi +1</button>
-        <button class="btn btn-ghost" data-d-issue>Izdaj −1</button>
+        <input class="qin" id="d-qty" type="number" min="1" value="1"
+               inputmode="numeric" aria-label="Količina">
+        <button class="btn btn-ghost" data-d-recv>Zaprimi</button>
+        <button class="btn btn-ghost" data-d-issue>Izdaj</button>
         ${proposal ? `<button class="btn btn-red" data-d-order>Naruči ${esc(String(proposal.quantity))} kom</button>` : ""}
         ${ordered ? `<button class="btn btn-ghost" disabled>Naručeno (${esc(String(ordered.quantity))} kom)</button>` : ""}
       </div>
     </div>`;
 
+  const dQty = () => {
+    const n = parseInt(target.querySelector("#d-qty")?.value, 10);
+    return Number.isFinite(n) && n > 0 ? n : 1;
+  };
   target.querySelector("[data-d-recv]").onclick = () =>
-    act(main, ctx, () => db.adjustQty(item.id, +1, ctx.session.name), item.id);
+    act(main, ctx, () => db.adjustQty(item.id, +dQty(), ctx.session.name), item.id);
   target.querySelector("[data-d-issue]").onclick = () =>
-    act(main, ctx, () => db.adjustQty(item.id, -1, ctx.session.name), item.id);
+    act(main, ctx, () => db.adjustQty(item.id, -dQty(), ctx.session.name), item.id);
   const orderBtn = target.querySelector("[data-d-order]");
   // Ordering always goes through the same confirmation dialog.
   if (orderBtn) orderBtn.onclick = () => confirmReorder(main, ctx, item, proposal);
@@ -182,10 +198,13 @@ function confirmReorder(main, ctx, item, proposal) {
   scrim.className = "scrim";
   scrim.innerHTML = `
     <div class="modal" role="dialog" aria-modal="true" aria-label="Narudžba dijelova">
-      <h2>Narudžba dijelova</h2>
-      <p><b>${esc(item.name)}</b> je na ${esc(String(item.qty))} kom (minimum
-         ${esc(String(item.min))}). Predlažemo narudžbu <b>${esc(String(proposal.quantity))} kom</b>
-         od dobavljača <b>${esc(proposal.supplier)}</b>.</p>
+      <h2>Narudžba</h2>
+      <p><b>${esc(item.name)}</b> — ${esc(String(item.qty))}/${esc(String(item.min))} kom ·
+         ${esc(proposal.supplier)}</p>
+      <p style="display:flex;align-items:center;gap:10px;margin-top:10px">
+        <label for="ro-qty">Količina</label>
+        <input class="qin" id="ro-qty" type="number" min="1"
+               value="${esc(String(proposal.quantity))}" inputmode="numeric"></p>
       <div class="acts">
         <button class="btn btn-ghost" data-cancel>Odustani</button>
         <button class="btn btn-red" data-place>Naruči</button>
@@ -202,7 +221,7 @@ function confirmReorder(main, ctx, item, proposal) {
     if (e.key === "Escape") { close(); return; }
     if (e.key === "Tab") {
       // Two focusables; keep Tab cycling inside the dialog.
-      const focusables = [...scrim.querySelectorAll("button")];
+      const focusables = [...scrim.querySelectorAll("button,input")];
       const idx = focusables.indexOf(document.activeElement);
       e.preventDefault();
       const next = e.shiftKey
@@ -216,7 +235,8 @@ function confirmReorder(main, ctx, item, proposal) {
   scrim.addEventListener("click", (e) => { if (e.target === scrim) close(); });
   scrim.querySelector("[data-place]").onclick = () => {
     try {
-      const o = db.placeReorder(item.id);
+      const n = parseInt(scrim.querySelector("#ro-qty")?.value, 10);
+      const o = db.placeReorder(item.id, Number.isFinite(n) && n > 0 ? n : undefined);
       toast(`Narudžba poslana: ${item.name} × ${o.quantity} (${o.supplier})`);
     } catch (err) { toast(err.message); }
     close(false);          // the old row button is about to be replaced

@@ -16,8 +16,8 @@ export function render(main, ctx) {
   const items = db.listItems();
   const base = appBaseUrl();
   main.innerHTML = `
-    <div class="panel">
-      <div class="ph">${icon("scan")}<h2>Skeniranje</h2></div>
+    <div class="panel tabbed">
+      <h2 class="tab-tl">Skeniranje</h2>
       <div class="row"><span class="b">
         <span class="n">Skeniraj naljepnicu kamerom telefona</span>
         <span class="a">QR je URL — otvara točan artikl i nosi dobavljača.
@@ -36,8 +36,8 @@ export function render(main, ctx) {
             <span class="a mono" style="text-transform:none">${esc(qrPayload(it, base))}</span></span>
         </div>`).join("")}
     </div>
-    <div class="panel">
-      <div class="ph">${icon("box")}<h2>Nova naljepnica — veliki dijelovi</h2></div>
+    <div class="panel tabbed">
+      <h2 class="tab-tl">Nova naljepnica</h2>
       <div class="row"><span class="b">
         <span class="n">Slikaj pločicu uređaja</span>
         <span class="a">Gemini očita serijski broj sa slike i kreira QR naljepnicu.
