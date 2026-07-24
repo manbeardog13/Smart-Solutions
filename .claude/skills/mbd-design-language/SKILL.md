@@ -65,12 +65,31 @@ press (red for Smart Solutions). Canvas: `#EEF0F1`/`#0A0C11` with three
 quiet radial pools (brand-tinted, cool blue, gunmetal) + fine grain — no
 drawn shapes, arcs, or lines, ever.
 
-- **Startup splash**: the brand mark ALONE (no wordmark), centered on
-  the flat canvas with a small load bar (132×3px capsule, brand-color
-  fill scaling in ~1s) — then the splash fades (~420 ms) and the gate's
-  entrance begins. NO glow behind the mark (a drop-shadow reads as a
-  colored box on the flat canvas). Splash shows only on first paint,
-  never on logout; skipped under reduced motion.
+- **Startup cinematic** (~2.5 s, `js/motion.js`, GSAP core vendored at
+  `js/vendor/gsap.min.js` — owner-authorized): full-viewport city
+  photograph eases in (scale 1.06→1) → frosted card materializes
+  (opacity + y + scale .965→1 + blur 10→0 clearing by 60%, expo.out)
+  → the mark ASSEMBLES centered and large from its real artwork sliced
+  into four diagonal clip-path bands, parts sliding in along the stripe
+  axis, `back.out(1.5)`, 70 ms stagger (never a fade, never redrawn)
+  → one travelling specular pass (gradient masked to the mark, single
+  sweep, base opacity 0) → wordmark lines rise from slide-up masks
+  ("smart" 1.20, "solutions" 1.35) while the lockup glides to optical
+  center → the lockup flies home to its card slot (single-element FLIP,
+  power3.inOut — pixel-continuous landing) → form settles in one quiet
+  stagger (2.25 s). Idle: 1 % breathing (scale 1.008, sine, 2.6 s).
+  Tap or keypress skips to the finished frame. Cinematic runs on first
+  paint only, never on logout. Reduced motion (or missing GSAP) starts
+  on the finished frame — the Final Frame Contract: every timeline's
+  end state is the exact static design, hidden states are set from JS
+  only.
+- **Login → dashboard: the logo IS the transition.** On submit the
+  mark's four bands stretch into full-width brand rails (2px,
+  transform-only scaleX, 45 ms stagger) while a paper veil covers the
+  shell swap, the mark flies onto the top-bar brand button (aim at the
+  44 px button box — a freshly rendered img has no reliable layout),
+  and the dashboard deals its cards center-out beneath. Overlay lives
+  on <body>, is removed on complete plus a safety timeout.
 - **One compact card**: `min(376px, 100% − 40px)`, `margin:auto`,
   radius 28px, generous padding. Fully opaque and matte: white in
   light, anthracite (`#1B1C20`) in dark — no backdrop blur, no
@@ -88,13 +107,14 @@ drawn shapes, arcs, or lines, ever.
   `linear-gradient(180deg, lighter, brand 58%, darker)`, soft glow
   `0 16px 30px -10px rgba(brand,.42)`, inset top highlight, arrow that
   slides +3px on hover) → centered "Prvi put? Napravi račun".
-- **Backdrop**: quiet stylised composition from the palette, never a
-  photo — faint brand bloom, blurred diagonal sash, huge quiet arc,
-  fine SVG grain (.05), optional cursor glow (transform-only, hidden on
-  touch/reduced-motion). Resolves from heavy blur on startup; the card
-  emerges once (blur-fade + 8px rise, 620 ms). After startup nothing on
-  the gate animates. Top edge fades into the status-bar strip so dark
-  mode runs behind the iPhone notch without a seam.
+- **Backdrop**: a real full-viewport photograph of the company's city
+  (Smart Solutions: Dubrovnik — `brand/bg-dubrovnik-day.jpg` light,
+  `bg-dubrovnik-dusk.jpg` dark, provenance in `brand/SOURCES.md`) under
+  a quiet directional veil + fine grain. The ASC canvas (cloud tone +
+  three radial pools) sits beneath as the loading/fallback layer. The
+  frosted card refracts the photo (`blur 34 saturate 180%`). This photo
+  rule is LOGON-ONLY — in-app canvas stays photo-free. Dark mode runs
+  behind the iPhone notch without a seam.
 - **In-app carryover**: the dark stage language (near-black gradient
   panel, two-tone headline, corner notch tab with 18px inverted-radius
   bevels, faded catalogue imagery) lives on the DASHBOARD HERO, not on

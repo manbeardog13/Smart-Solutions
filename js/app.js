@@ -8,6 +8,7 @@ import { getState, setState, loadSession, signIn, signOut, on } from "./store.js
 import { viewsForRole, isFieldRole, deviceClass, VIEW_LABELS } from "./domain.js";
 import * as db from "./db.js";
 import { esc, icon, go, toast, setThemeColor } from "./ui.js";
+import * as motion from "./motion.js";
 
 const VIEW_DEFS = [
   { key: "dashboard", route: "/", ic: "dash", load: () => import("./views/dashboard.js") },
@@ -78,98 +79,81 @@ function applyDevice() {
 }
 
 // ---- Login gate -------------------------------------------------------------
-// The ASC phone-build logon, in Smart Solutions red: one compact floating
+// The ASC phone-build logon, in Smart Solutions red: one compact frosted
 // card (logo top-left, iOS-style theme switch top-right, icon fields,
-// uppercase divider, gradient CTA with a soft glow). The backdrop is a quiet
-// stylised composition — bloom, sash, arc, grain — never a photo.
+// uppercase divider, gradient CTA with a soft glow) over a full-viewport
+// Dubrovnik backdrop. First paint runs the startup cinematic (js/motion.js):
+// backdrop → glass → logo assembly → brand reveal → form.
 
 function renderGate() {
-  const first = !renderGate._shown; // startup gets splash + the full entrance
+  const first = !renderGate._shown; // startup gets the full cinematic
   renderGate._shown = true;
-  // Startup: the red double-S mark alone, centered, with a small load bar —
-  // then the splash fades and the gate's entrance sequence takes over.
-  const splash = first ? `
-    <div class="splash" aria-hidden="true">
-      <div class="sp-core">
-        <img class="sp-mark" src="brand/logo-mark.png" alt="">
-        <i class="sp-rule"></i>
-      </div>
-    </div>` : "";
-  root.innerHTML = `${splash}
+  // The card logo is the real artwork, pre-split for assembly: four diagonal
+  // slices of the mark plus the two-line wordmark behind slide-up masks.
+  // Its box is identical to the old single image (audited geometry).
+  const logo = `
+    <span class="lc-logo lc-asm" role="img" aria-label="smart solutions">
+      <span class="asm-mark">
+        ${motion.MARK_BANDS.map((p) =>
+          `<img class="bar" src="brand/logo-mark.png" alt="" style="clip-path:${p}">`).join("")}
+        <i class="asm-sheen" aria-hidden="true"></i>
+      </span>
+      <span class="asm-word" aria-hidden="true">
+        <span class="w-clip w-top"><img src="brand/logo-word.png" alt=""></span>
+        <span class="w-clip w-bot"><img src="brand/logo-word.png" alt=""></span>
+      </span>
+    </span>`;
+  root.innerHTML = `
     <div class="gate">
       <div class="auth-bg" aria-hidden="true"></div>
+      <div class="auth-photo" aria-hidden="true"></div>
+      <div class="auth-veil" aria-hidden="true"></div>
       <img class="mbd-sig" src="brand/mbd13.png" alt="" aria-hidden="true">
       <div class="login-card" role="dialog" aria-label="Prijava">
         <div class="lc-top">
-          <img class="lc-logo" src="brand/logo-full.png" alt="smart solutions">
+          ${logo}
           <button type="button" class="theme sw" role="switch" aria-checked="false"
                   aria-label="Tamni način" data-theme-toggle><i></i></button>
         </div>
-        <h1 class="auth-title">Dobrodošli natrag</h1>
-        <p class="auth-sub">Operativa · Dubrovnik</p>
+        <h1 class="auth-title" data-cine>Dobrodošli natrag</h1>
+        <p class="auth-sub" data-cine>Operativa · Dubrovnik</p>
         <form id="login-form" class="auth-form" novalidate>
-          <button type="button" class="btn-google" data-google>
+          <button type="button" class="btn-google" data-google data-cine>
             <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.3c0-.9-.1-1.5-.3-2.2H12v4.1h6.5c-.1 1.1-.8 2.7-2.4 3.8l3.7 2.9c2.2-2.1 3.7-5.1 3.7-8.6z"/><path fill="#34A853" d="M12 24c3.2 0 5.9-1.1 7.9-2.9l-3.7-2.9c-1 .7-2.4 1.2-4.2 1.2-3.2 0-5.9-2.1-6.8-5.1L1.3 17.2C3.3 21.2 7.3 24 12 24z"/><path fill="#FBBC05" d="M5.2 14.3a7.5 7.5 0 0 1 0-4.6L1.3 6.8a12 12 0 0 0 0 10.4l3.9-2.9z"/><path fill="#EA4335" d="M12 4.7c1.8 0 3 .8 3.7 1.4l2.7-2.7C16.9 1.3 14.2 0 12 0 7.3 0 3.3 2.8 1.3 6.8l3.9 2.9c.9-3 3.6-5 6.8-5z"/></svg>
             <span>Nastavi s Google</span>
           </button>
-          <div class="auth-divider"><span>ili email</span></div>
-          <label class="fieldx">
+          <div class="auth-divider" data-cine><span>ili email</span></div>
+          <label class="fieldx" data-cine>
             <span class="fx-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="m3 6.5 9 6.5 9-6.5"/></svg></span>
             <input id="lg-user" autocomplete="username" placeholder="ime@smart-solutions.hr"
                    aria-label="Email"></label>
-          <label class="fieldx">
+          <label class="fieldx" data-cine>
             <span class="fx-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10.5" width="16" height="10" rx="2.5"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg></span>
             <input id="lg-pass" type="password" autocomplete="current-password" placeholder="Lozinka"
                    aria-label="Lozinka">
             <button type="button" class="fx-eye" data-eye aria-label="Prikaži lozinku" aria-pressed="false">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.7"/></svg>
             </button></label>
-          <div class="auth-row auth-row--end">
+          <div class="auth-row auth-row--end" data-cine>
             <button type="button" class="auth-forgot" data-forgot>Zaboravljena lozinka?</button>
           </div>
-          <button class="btn-brand" type="submit">Prijavi se
+          <button class="btn-brand" type="submit" data-cine>Prijavi se
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </button>
           <p class="auth-msg" role="status" aria-live="polite"></p>
-          <p class="auth-create">Prvi put? <button type="button" class="auth-create-link" data-create>Napravi račun</button></p>
+          <p class="auth-create" data-cine>Prvi put? <button type="button" class="auth-create-link" data-create>Napravi račun</button></p>
         </form>
       </div>
     </div>`;
 
-  // Splash → gate hand-off. Reduced motion (or a repeat visit to the gate)
-  // goes straight to the panel.
-  const sp = root.querySelector(".splash");
+  // First paint: the startup cinematic. Repeat visits (logout) get the quick
+  // static card — the timeline's final frame IS the static design, so a
+  // missing GSAP or reduced motion simply starts there.
   const gateEl = root.querySelector(".gate");
-  if (sp) {
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      sp.remove();
-    } else {
-      const reveal = () => {
-        if (!sp.isConnected || sp.classList.contains("fly") || sp.classList.contains("out")) return;
-        const mark = sp.querySelector(".sp-mark");
-        const target = root.querySelector(".lc-logo");
-        if (mark && target) {
-          // FLIP: fly the splash mark onto the mark portion of the card logo
-          // (the mark is the left, square part of the full artwork).
-          gateEl.classList.add("enter");
-          const from = mark.getBoundingClientRect();
-          const lg = target.getBoundingClientRect();
-          const markW = lg.height * (from.width / from.height);
-          const dx = (lg.left + markW / 2) - (from.left + from.width / 2);
-          const dy = (lg.top + lg.height / 2) - (from.top + from.height / 2);
-          const s = lg.height / from.height;
-          sp.classList.add("fly");
-          mark.style.transform = `translate(${dx}px, ${dy}px) scale(${s})`;
-          setTimeout(() => sp.remove(), 660);
-        } else {
-          sp.classList.add("out");
-          gateEl.classList.add("enter");
-          setTimeout(() => sp.remove(), 460);
-        }
-      };
-      sp.addEventListener("click", reveal); // never block an eager user
-      setTimeout(reveal, 950);
-    }
+  if (first) {
+    if (!motion.gateIntro(gateEl)) gateEl.classList.add("plain");
+  } else {
+    gateEl.classList.add("plain");
   }
 
   // eye toggle: show/hide the password
@@ -199,22 +183,17 @@ function renderGate() {
   // (marko -> field tech, ana -> warehouse); anything else is the owner.
   root.querySelector("#login-form").onsubmit = (e) => {
     e.preventDefault();
-    if (root.querySelector(".gate.out")) return; // hand-off already running
+    if (renderGate._leaving) return; // hand-off already running
+    renderGate._leaving = true;
     const typed = (root.querySelector("#lg-user").value || "").toLowerCase();
     const users = db.demoUsers();
     const user = users.find((u) => typed.includes(u.name.toLowerCase())) ||
                  users.find((u) => u.role === "vlasnik");
     signIn(user);
-    // Continuous transition, not a hard cut: the gate glides out, the
-    // dashboard deals in. Reduced motion goes straight to the shell.
-    const gate = root.querySelector(".gate");
-    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce || !gate) { renderShell(true); return; }
-    gate.classList.add("out");
-    let done = false;
-    const finish = () => { if (!done) { done = true; renderShell(true); } };
-    gate.addEventListener("animationend", (e2) => { if (e2.target === gate) finish(); });
-    setTimeout(finish, 380); // safety: never strand the user on the gate
+    // The logo IS the transition: bars stretch into rails, the mark flies to
+    // the top-bar brand button, the dashboard deals in beneath. Reduced
+    // motion (or no GSAP) goes straight to the shell.
+    motion.gateToShell((fresh) => { renderGate._leaving = false; renderShell(fresh); });
   };
 }
 

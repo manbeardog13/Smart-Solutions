@@ -95,7 +95,6 @@ a{color:var(--red);text-underline-offset:3px}
 .gate{min-height:100dvh;display:flex;position:relative;z-index:1;overflow-y:auto;
       -webkit-overflow-scrolling:touch;
       padding:calc(16px + env(safe-area-inset-top)) 0 calc(16px + env(safe-area-inset-bottom))}
-.gate.enter{animation:app-fade .64s ease both}
 @keyframes app-fade{from{opacity:0}}
 
 /* startup splash (ASC Prag geometry): the double-S mark alone over the same
@@ -122,11 +121,6 @@ a{color:var(--red);text-underline-offset:3px}
 @keyframes sp-rule{from{transform:scaleX(0)}}
 .splash.out{animation:sp-out .42s cubic-bezier(.25,1,.5,1) both;pointer-events:none}
 @keyframes sp-out{to{opacity:0}}
-/* seamless landing: the mark flies to the card logo while the veil melts */
-.splash .sp-mark{transition:transform .62s cubic-bezier(.22,1,.36,1)}
-.splash.fly{pointer-events:none;background:transparent;transition:background .45s ease .1s}
-.splash.fly::before{opacity:0;transition:opacity .45s ease .1s}
-.splash.fly .sp-rule{opacity:0;transition:opacity .25s ease}
 
 
 /* the canvas — the exact ASC phone-build backdrop: a soft cloud tone with
@@ -144,7 +138,20 @@ a{color:var(--red);text-underline-offset:3px}
   radial-gradient(44vmax 40vmax at 86% -8%,rgba(244,245,247,.04),transparent 62%)}
 .auth-bg::after{content:"";position:absolute;inset:0;opacity:.04;mix-blend-mode:overlay;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E")}
-.gate.enter .auth-bg{animation:app-fade .64s ease both}
+
+/* the Dubrovnik backdrop — a real coastal photograph fills the ENTIRE
+   viewport behind the frosted card (the glass needs something to refract).
+   A quiet veil keeps the card and the copy honest in both themes. */
+.auth-photo{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:url("../brand/bg-dubrovnik-day.jpg") center/cover no-repeat}
+:root[data-theme="dark"] .auth-photo{
+  background-image:url("../brand/bg-dubrovnik-dusk.jpg")}
+.auth-veil{position:fixed;inset:0;z-index:0;pointer-events:none;background:
+  linear-gradient(180deg,rgba(238,240,241,.04),rgba(238,240,241,.12) 55%,rgba(238,240,241,.30))}
+:root[data-theme="dark"] .auth-veil{background:
+  linear-gradient(180deg,rgba(10,12,17,.22),rgba(10,12,17,.34) 55%,rgba(10,12,17,.52))}
+.auth-veil::after{content:"";position:absolute;inset:0;opacity:.05;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E")}
 
 /* the card — audited 1:1 against the ASC phone build (scripts/audit-login.mjs):
    same width, side gaps, padding, radius, element heights, gaps and type scale.
@@ -158,8 +165,8 @@ a{color:var(--red);text-underline-offset:3px}
              inset 0 1px 0 rgba(255,255,255,.55),inset 0 -1px 0 rgba(2,3,5,.05)}
 @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
   .login-card{background:rgba(255,255,255,.44);
-    -webkit-backdrop-filter:blur(34px) saturate(150%) brightness(108%);
-    backdrop-filter:blur(34px) saturate(150%) brightness(108%)}
+    -webkit-backdrop-filter:blur(34px) saturate(180%) brightness(106%);
+    backdrop-filter:blur(34px) saturate(180%) brightness(106%)}
 }
 :root[data-theme="dark"] .login-card{background:rgba(30,32,38,.88);
   border-color:rgba(255,255,255,.08);border-top-color:rgba(255,255,255,.16);
@@ -174,15 +181,30 @@ a{color:var(--red);text-underline-offset:3px}
   opacity:.035;mix-blend-mode:overlay;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
 .login-card>*{position:relative;z-index:1}
-.gate.enter .login-card{animation:login-emerge .56s cubic-bezier(.25,1,.5,1) .1s both}
-@keyframes login-emerge{from{opacity:0;transform:translateY(14px) scale(.985)}
-  to{opacity:1;transform:none}}
-.gate:not(.enter) .login-card{animation:card-in .3s var(--snap) both}
+/* repeat visits (logout) skip the cinematic — quick, quiet card */
+.gate.plain .login-card{animation:card-in .3s var(--snap) both}
 @keyframes card-in{from{opacity:0;transform:translateY(16px) scale(.98)}to{opacity:1;transform:none}}
-@keyframes splash-fade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 .lc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
-/* logo height matches the ASC row exactly; width follows the brand's aspect */
+/* logo height matches the ASC row exactly; width follows the brand's aspect.
+   The artwork is composed live from its real parts (never redrawn): the mark
+   as four diagonal slices for the assembly, the two-line wordmark behind
+   slide-up masks. The composed box equals the old single logo-full image. */
 .lc-logo{height:26px;width:auto;display:block}
+.lc-asm{display:flex;align-items:center;gap:.4px}
+.asm-mark{position:relative;flex:none;height:26px;width:calc(26px*409/412)}
+.asm-mark .bar{position:absolute;inset:0;width:100%;height:100%;display:block}
+.asm-sheen{position:absolute;inset:0;opacity:0;pointer-events:none;
+  background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.75) 50%,transparent 60%);
+  background-size:240% 100%;background-position:140% 0;background-repeat:no-repeat;
+  -webkit-mask:url("../brand/logo-mark.png") center/contain no-repeat;
+  mask:url("../brand/logo-mark.png") center/contain no-repeat}
+.asm-word{position:relative;flex:none;height:calc(26px*269/412);
+  width:calc(26px*661/412)}
+.asm-word .w-clip{position:absolute;left:0;width:100%;height:50%;overflow:hidden}
+.asm-word .w-top{top:0}
+.asm-word .w-bot{top:50%}
+.asm-word .w-clip img{position:absolute;left:0;top:0;width:100%;height:auto;display:block}
+.asm-word .w-bot img{top:-100%}
 /* iOS sliding theme switch, ASC size — spring thumb, brand micro-glow on move */
 .sw{position:relative;width:38px;height:22px;flex:0 0 38px;border-radius:999px;border:0;padding:0;
   background:var(--line);transition:background .32s cubic-bezier(.25,1,.5,1);
@@ -739,6 +761,16 @@ a{color:var(--red);text-underline-offset:3px}
 }
 
 /* gate exit: the continuous login → dashboard transition */
+/* login → dashboard hand-off overlay: a paper veil covers the swap while
+   the mark's four bands stretch into full-width rails and the mark itself
+   flies home to the top-bar brand button (js/motion.js gateToShell). */
+.handoff{position:fixed;inset:0;z-index:80;pointer-events:none}
+.ho-veil{position:absolute;inset:0}
+.ho-rail{position:absolute;height:2px;width:100vw;border-radius:2px;
+  background:linear-gradient(90deg,transparent,var(--red) 16%,var(--red) 84%,transparent);
+  transform-origin:50% 50%}
+.ho-mark{position:absolute;display:block}
+.brand-mark.await{opacity:0}
 .gate.out{animation:gate-out .34s var(--snap) both}
 @keyframes gate-out{to{opacity:0;transform:scale(1.02)}}
 .gate.out .login-card{animation:login-out .3s var(--snap) both}
