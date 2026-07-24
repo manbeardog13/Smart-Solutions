@@ -145,13 +145,30 @@ function renderGate() {
       sp.remove();
     } else {
       const reveal = () => {
-        if (!sp.isConnected || sp.classList.contains("out")) return;
-        sp.classList.add("out");
-        gateEl.classList.add("enter");
-        setTimeout(() => sp.remove(), 460);
+        if (!sp.isConnected || sp.classList.contains("fly") || sp.classList.contains("out")) return;
+        const mark = sp.querySelector(".sp-mark");
+        const target = root.querySelector(".lc-logo");
+        if (mark && target) {
+          // FLIP: fly the splash mark onto the mark portion of the card logo
+          // (the mark is the left, square part of the full artwork).
+          gateEl.classList.add("enter");
+          const from = mark.getBoundingClientRect();
+          const lg = target.getBoundingClientRect();
+          const markW = lg.height * (from.width / from.height);
+          const dx = (lg.left + markW / 2) - (from.left + from.width / 2);
+          const dy = (lg.top + lg.height / 2) - (from.top + from.height / 2);
+          const s = lg.height / from.height;
+          sp.classList.add("fly");
+          mark.style.transform = `translate(${dx}px, ${dy}px) scale(${s})`;
+          setTimeout(() => sp.remove(), 660);
+        } else {
+          sp.classList.add("out");
+          gateEl.classList.add("enter");
+          setTimeout(() => sp.remove(), 460);
+        }
       };
       sp.addEventListener("click", reveal); // never block an eager user
-      setTimeout(reveal, 900);
+      setTimeout(reveal, 950);
     }
   }
 
@@ -225,7 +242,7 @@ function renderShell(freshLogin = false) {
     <div class="wash"></div>
     <div class="grain" aria-hidden="true"></div>
     <img class="mbd-sig" src="brand/mbd13.png" alt="" aria-hidden="true">
-    <aside class="side" id="side" aria-label="Glavni izbornik">
+    <aside class="side ${freshLogin ? "enter" : ""}" id="side" aria-label="Glavni izbornik">
       <div class="sb-head">
         <span class="sb-eyebrow">Izbornik</span>
         <button class="sb-collapse" data-collapse aria-label="Suzi izbornik">
