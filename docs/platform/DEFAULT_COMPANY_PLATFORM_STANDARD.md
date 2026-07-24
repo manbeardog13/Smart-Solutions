@@ -761,3 +761,20 @@ Claude and Codex must treat it as a persistent implementation contract across al
 The visual identity of each company may change. The quality bar, responsive discipline, operational clarity, security posture, role-awareness, launch sequence, and core interaction philosophy must remain consistent.  
   
 ## Default rule: premium minimalism, branded entry, one adaptive product, role-aware operation, real data, clear actions, and no design drift.  
+
+---
+
+**Appendix A — Hardcoded Default Look (authorized amendment by Toni, 24.07.2026)**
+
+The default company-platform look is the ASC application look, re-tinted per company brand. These are concrete, non-negotiable defaults; the reference implementation is `manbeardog13/Smart-Solutions`.
+
+	1.	**Navigation is a LEFT SIDEBAR on every device class. Floating bottom docks or tab bars are prohibited.** Desktop: a floating opaque sidebar (248px, collapsible to a 72px icon rail, persisted), one step darker than the canvas, radius 22, module-accented active items (3px accent bar + accent ink; the dashboard item carries the brand accent). Phone: the SAME sidebar slides in from the left as an overlay behind a hamburger button, with a scrim; scrim tap, navigation, or Escape closes it.
+	2.	**Canvas**: cloud tone (`#EEF0F1` light / `#0A0C11` dark) with three quiet radial pools (brand-tinted, cool blue, gunmetal) and fine SVG grain. No photo backdrops, no drawn shapes or lines.
+	3.	**Shell**: one glass container (max-width 1180, radius 32, blur 30 + saturate + brightness, rim borders, sheet-in entrance) holding a lightweight 40px top bar (hamburger on phone, ~26px logo, demo/status chip) and the content.
+	4.	**Surfaces**: solid panels (`#F4F4F3`/`#FDFDFC` light, `#22242A`/`#2B2D33` dark), radius 24, one layered card shadow, no borders. **Notched corner tabs**: uppercase 10.5px labels nested INTO card corners with 14px inverse-radius bevels over an opaque gap colour.
+	5.	**Dashboard**: dark stage hero (gradient `#0B0C0E→#17181B`, brand-tinted scrim over a real photo on the right), uppercase eyebrow, display-font greeting, ONE big honest number with its unit, a capacity meter, and a corner tab. KPI cards and the attention list follow. Numbers are always real.
+	6.	**Type**: Inter for text, Sora for display titles and numbers. Sentence case everywhere; uppercase only in eyebrows, corner tabs, and chips.
+	7.	**Logon + splash**: the single-card logon matched to the ASC phone build, measured by `scripts/audit-login.mjs` within ±2px (card edge gaps, every element's size, gaps, fonts, radii — scale the card, never cut it); splash is the brand mark alone with a thin brand rule beneath.
+	8.	**Theme**: intentional light and dark tokens for every surface. The theme control lives in the sidebar (dot = light, ring = dark) and on the logon card (iOS switch emitting a brand-colour micro-glow on press).
+
+A new platform starts by copying the reference implementation and re-tinting the brand colour, logo, imagery, and copy — never by re-designing this chrome.

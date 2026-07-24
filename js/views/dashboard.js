@@ -29,20 +29,26 @@ export function render(main, ctx) {
     .sort((a, b) => a.dist - b.dist)
     .map((c, rank) => ({ ...c, delay: delays[rank] }));
 
-  // Hero stage: the logon stage language inside the app — dark panel, short
-  // two-tone greeting, one honest status line, catalogue imagery, notch tab.
+  // Hero stage — the ASC dashboard stage in Operativa terms: eyebrow, greeting,
+  // one big honest number, a capacity meter, catalogue imagery, corner tab.
   const h = new Date().getHours();
   const hi = h < 10 ? "Dobro jutro" : h < 18 ? "Dobar dan" : "Dobra večer";
-  const status = low.length === 0 ? "Sve je pod kontrolom."
-    : hrCount(low.length, ["pozicija traži pažnju.", "pozicije traže pažnju.", "pozicija traži pažnju."]);
+  const ready = items.length - low.length;
+  const pct = items.length ? Math.round((ready / items.length) * 100) : 100;
+  const status = low.length === 0 ? "sve pod kontrolom"
+    : hrCount(low.length, ["ispod minimuma", "ispod minimuma", "ispod minimuma"]);
 
   main.innerHTML = `
     <section class="hero">
       <div class="hero-img" aria-hidden="true"
            style="background-image:url('catalogue/images/aquarea-lifestyle.jpg')"></div>
-      <h1 class="stage-title">${esc(hi)}, ${esc((ctx.session && ctx.session.name) || "")}.<br>
-        <span>${esc(status)}</span></h1>
-      <span class="notch">Ploča · danas</span>
+      <span class="scrim" aria-hidden="true"></span>
+      <span class="k">Operativa · Smart Solutions · Dubrovnik</span>
+      <h1 class="greet-line">${esc(hi)}, ${esc((ctx.session && ctx.session.name) || "")}.</h1>
+      <div class="hero-num">${esc(String(ready))}<em>${esc(hrCount(ready, ["pozicija spremna", "pozicije spremne", "pozicija spremno"]).replace(/^\d+\s*/, ""))}</em></div>
+      <div class="cap">${esc(String(items.length))} artikala na stanju · ${esc(status)}</div>
+      <div class="meter"><i style="width:${pct}%"></i></div>
+      <span class="tab-corner">danas · Dubrovnik</span>
     </section>
     <div class="cards deal">
       ${order.sort((a, b) => a.i - b.i).map((c) => `
