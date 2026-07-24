@@ -18,11 +18,6 @@ const VIEW_DEFS = [
   { key: "admin", route: "/admin", ic: "admin", load: () => import("./views/admin.js") },
 ].map((v) => ({ ...v, label: VIEW_LABELS[v.key] }));
 
-// The real logo artwork (brand/, background removed). logo-fx adds the
-// masked sheen sweep + lift on hover; logo-idle breathes a soft red glow.
-const MARK_IMG = `<span class="logo-fx logo-mark-fx logo-idle"><img src="brand/logo-mark.png" alt=""></span>`;
-const WORD_IMG = `<span class="logo-fx logo-word-fx"><img src="brand/logo-word.png" alt="smart solutions"></span>`;
-
 // Utility shelf targets: real destinations, never a dead click.
 const SHELF_APPS = [
   { name: "Facebook", url: "https://facebook.com", brand: "#1877F2",
@@ -148,12 +143,14 @@ function renderGate() {
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
       sp.remove();
     } else {
-      setTimeout(() => {
-        if (!sp.isConnected) return;
+      const reveal = () => {
+        if (!sp.isConnected || sp.classList.contains("out")) return;
         sp.classList.add("out");
         gateEl.classList.add("enter");
         setTimeout(() => sp.remove(), 460);
-      }, 1200);
+      };
+      sp.addEventListener("click", reveal); // never block an eager user
+      setTimeout(reveal, 900);
     }
   }
 
@@ -211,58 +208,67 @@ function navForSession(session) {
   return VIEW_DEFS.filter((v) => allowed.includes(v.key));
 }
 
-const PIN_KEY = "ss.railPinned";
+const SIDE_KEY = "ss.side";
 
 function renderShell(freshLogin = false) {
   const { session } = getState();
   if (!session) { renderGate(); return; }
   document.body.classList.toggle("field-mode", isFieldRole(session.role));
   const nav = navForSession(session);
-  let pinned = false;
-  try { pinned = JSON.parse(localStorage.getItem(PIN_KEY)) === true; } catch { /* default */ }
-  if (document.body.classList.contains("phone")) pinned = false; // bottom bar, nothing to pin
+  const html = document.documentElement;
+  let railMode = false;
+  try { railMode = localStorage.getItem(SIDE_KEY) === "rail"; } catch { /* default */ }
+  html.setAttribute("data-side", railMode ? "rail" : "full");
+  html.classList.remove("side-open");
   root.innerHTML = `
-    <div class="shell ${pinned ? "pinned" : ""}">
-      <div class="wash"></div>
-      <aside class="rail ${pinned ? "open" : ""}" id="rail">
-        <button class="brand" data-home aria-label="Na ploču">
-          <span class="mark">${MARK_IMG}</span><span class="wm-img">${WORD_IMG}</span>
+    <div class="wash"></div>
+    <div class="grain" aria-hidden="true"></div>
+    <aside class="side" id="side" aria-label="Glavni izbornik">
+      <div class="sb-head">
+        <span class="sb-eyebrow">Izbornik</span>
+        <button class="sb-collapse" data-collapse aria-label="Suzi izbornik">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
         </button>
-        <button class="nl pin" data-pin aria-pressed="${pinned}" title="Zakvači izbornik">
-          ${icon("pin")}<span class="txt">Zakvači izbornik</span>
+      </div>
+      <nav class="sb-nav">
+        ${nav.map((v) => `
+          <button class="sb-item" data-m="${esc(v.key)}" data-route="${esc(v.route)}"
+                  aria-label="${esc(v.label)}">
+            ${icon(v.ic)}<span class="t">${esc(v.label)}</span>
+          </button>`).join("")}
+      </nav>
+      <div class="sb-foot">
+        <button class="sb-item theme" role="switch" aria-checked="false" data-theme-toggle>
+          <span class="md" aria-hidden="true"><i></i></span><span class="t">Tema</span>
         </button>
-        <nav>
-          ${nav.map((v) => `
-            <button class="nl" data-route="${esc(v.route)}" data-key="${esc(v.key)}">
-              ${icon(v.ic)}<span class="txt">${esc(v.label)}</span>
-            </button>`).join("")}
-        </nav>
-        <div class="foot">
-          ${themeButton()}
-          <button class="nl" data-logout>${icon("logout")}<span class="txt">Odjava</span></button>
-          <div class="acct"><span class="av">${esc(session.name[0])}</span>
-            <span><b>${esc(session.name)}</b><span>${esc(session.title)}</span></span></div>
+        <div class="sb-user">
+          <span class="sb-ava">${esc(session.name[0])}<span class="dot"></span></span>
+          <span class="sb-uid"><b>${esc(session.name)}</b><span>${esc(session.title)}</span></span>
+          <button class="sb-logout" data-logout aria-label="Odjava">${icon("logout")}</button>
         </div>
-      </aside>
-      <main>
-        <div class="top">
-          <h1 id="page-title" tabindex="-1">Ploča</h1>
+      </div>
+    </aside>
+    <div class="side-scrim" data-scrim aria-hidden="true"></div>
+    <div class="appwrap">
+      <main class="shell">
+        <header class="top">
+          <button class="sb-burger" data-burger aria-label="Otvori izbornik" aria-expanded="false">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+          </button>
+          <img class="top-logo" src="brand/logo-full.png" alt="smart solutions">
+          <h1 id="page-title" class="pgt" tabindex="-1">Ploča</h1>
           ${db.isLive() ? "" : '<span class="demo-badge">Demo</span>'}
-          <div class="right">
-            <span class="top-mini">${themeButton()}</span>
-            <button class="top-mini top-logout" data-logout-top aria-label="Odjava">${icon("logout")}</button>
-          </div>
-        </div>
+        </header>
         <div class="stage" id="main"></div>
       </main>
-      <div class="shelf" id="shelf">
-        <button class="handle" data-shelf-toggle aria-expanded="false"
-                aria-label="Brze aplikacije"></button>
-        <div class="capsule">
-          ${SHELF_APPS.map((a) => `
-            <a href="${a.url}" target="_blank" rel="noopener" aria-label="${esc(a.name)}"
-               style="--brand:${a.brand}">${a.svg}</a>`).join("")}
-        </div>
+    </div>
+    <div class="shelf" id="shelf">
+      <button class="handle" data-shelf-toggle aria-expanded="false"
+              aria-label="Brze aplikacije"></button>
+      <div class="capsule">
+        ${SHELF_APPS.map((a) => `
+          <a href="${a.url}" target="_blank" rel="noopener" aria-label="${esc(a.name)}"
+             style="--brand:${a.brand}">${a.svg}</a>`).join("")}
       </div>
     </div>`;
 
@@ -270,44 +276,47 @@ function renderShell(freshLogin = false) {
   syncThemeControls();
   const logout = () => {
     closeScrims();
+    html.classList.remove("side-open");
     signOut();
     document.body.classList.remove("field-mode");
     const t = document.getElementById("toast");
     if (t) t.classList.remove("on"); // previous user's last action must not linger
     try { history.replaceState(null, "", location.pathname + location.search); } catch { /* file:// */ }
     renderGate();
-    const card = root.querySelector(".login");
+    const card = root.querySelector(".login-card");
     if (card) { card.setAttribute("tabindex", "-1"); card.focus({ preventScroll: true }); }
   };
-  root.querySelector("[data-home]").onclick = () => go("/");
   root.querySelector("[data-logout]").onclick = logout;
-  root.querySelector("[data-logout-top]").onclick = logout;
 
-  // Pin: clicking keeps the rail open and the stage makes room (spec).
-  const rail = document.getElementById("rail");
-  const shellEl = root.querySelector(".shell");
-  root.querySelector("[data-pin]").onclick = (e) => {
-    const now = !shellEl.classList.contains("pinned");
-    shellEl.classList.toggle("pinned", now);
-    rail.classList.toggle("open", now);
-    e.currentTarget.setAttribute("aria-pressed", String(now));
-    try { localStorage.setItem(PIN_KEY, JSON.stringify(now)); } catch { /* fine */ }
+  // Collapse to the 72px icon rail (persisted) — desktop only, CSS hides it on
+  // phones where the same sidebar slides in as an overlay instead.
+  root.querySelector("[data-collapse]").onclick = () => {
+    const now = html.getAttribute("data-side") === "rail" ? "full" : "rail";
+    html.setAttribute("data-side", now);
+    try { localStorage.setItem(SIDE_KEY, now); } catch { /* fine */ }
   };
 
-  // Nav. On touch (no hover) the first tap opens the menu, the second selects.
-  const touchOnly = matchMedia("(hover: none)").matches;
-  root.querySelectorAll("[data-route]").forEach((btn) => {
-    btn.onclick = () => {
-      const phone = document.body.classList.contains("phone");
-      if (touchOnly && !phone && !rail.classList.contains("open")) {
-        rail.classList.add("open");
-        return;
-      }
-      if (touchOnly && !shellEl.classList.contains("pinned")) rail.classList.remove("open");
-      go(btn.dataset.route);
-    };
-  });
+  // Phone: hamburger opens the same sidebar as a left overlay with a scrim.
+  const burger = root.querySelector("[data-burger]");
+  const setSide = (open) => {
+    const was = html.classList.contains("side-open");
+    html.classList.toggle("side-open", open);
+    burger.setAttribute("aria-expanded", String(open));
+    // keyboard/AT: focus follows the overlay in, and back out to the burger
+    if (open && !was) {
+      const firstItem = root.querySelector(".sb-item");
+      if (firstItem) setTimeout(() => firstItem.focus({ preventScroll: true }), 340);
+    } else if (!open && was && document.activeElement &&
+               document.activeElement.closest && document.activeElement.closest(".side")) {
+      burger.focus({ preventScroll: true });
+    }
+  };
+  burger.onclick = () => setSide(!html.classList.contains("side-open"));
+  root.querySelector("[data-scrim]").onclick = () => setSide(false);
 
+  root.querySelectorAll(".sb-item[data-route]").forEach((btn) => {
+    btn.onclick = () => { setSide(false); go(btn.dataset.route); };
+  });
 
   // Shelf: the handle is a real button, so touch and keyboard both work.
   const shelf = document.getElementById("shelf");
@@ -320,14 +329,18 @@ function renderShell(freshLogin = false) {
   route(freshLogin);
 }
 
-// One document-level closer for the touch rail — bound once at boot, reads
-// the live DOM, so re-renders never stack listeners.
-function railOutsideCloser(e) {
-  const rail = document.getElementById("rail");
-  const shell = document.querySelector(".shell");
-  if (!rail || !shell) return;
-  if (!rail.contains(e.target) && !shell.classList.contains("pinned")) {
-    rail.classList.remove("open");
+// Escape closes the phone sidebar overlay — bound once at boot. Goes through
+// the same state as every other close path: burger aria stays true to reality
+// and focus returns to the burger instead of stranding on a hidden item.
+function sideEscCloser(e) {
+  if (e.key !== "Escape") return;
+  const html = document.documentElement;
+  if (!html.classList.contains("side-open")) return;
+  html.classList.remove("side-open");
+  const burger = document.querySelector("[data-burger]");
+  if (burger) {
+    burger.setAttribute("aria-expanded", "false");
+    burger.focus({ preventScroll: true });
   }
 }
 
@@ -369,15 +382,26 @@ async function route(freshLogin = false) {
     if (itemMatch && !wh) toast("Nemate pristup skladištu za ovu naljepnicu.");
   }
   setState({ route: def.route });
-  document.querySelectorAll(".nl[data-route]").forEach((b) =>
-    b.classList.toggle("on", b.dataset.route === def.route));
+  document.querySelectorAll(".sb-item[data-route]").forEach((b) => {
+    const on = b.dataset.route === def.route;
+    b.classList.toggle("on", on);
+    if (on) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
+  });
   const title = document.getElementById("page-title");
   if (title) title.textContent = def.label;
   let mod;
   try {
     mod = await def.load();
   } catch {
-    if (seq === routeSeq) toast("Učitavanje nije uspjelo — provjeri vezu i pokušaj ponovno.");
+    if (seq === routeSeq && currentMain) {
+      currentMain.innerHTML = `
+        <div class="panel"><div class="row"><span class="b">
+          <span class="n">Učitavanje nije uspjelo.</span>
+          <span class="a">Provjeri vezu i pokušaj ponovno.</span></span>
+          <button class="btn btn-ghost" data-retry>Pokušaj ponovno</button></div></div>`;
+      const r = currentMain.querySelector("[data-retry]");
+      if (r) r.onclick = () => route();
+    }
     return;
   }
   if (seq !== routeSeq || getState().session !== session) return; // superseded
@@ -402,9 +426,7 @@ function boot() {
   applyDevice();
   addEventListener("resize", applyDevice);
   addEventListener("hashchange", () => route());
-  if (matchMedia("(hover: none)").matches) {
-    document.addEventListener("pointerdown", railOutsideCloser, { passive: true });
-  }
+  document.addEventListener("keydown", sideEscCloser);
   // Another tab changed the shared demo DB or the session — reflect it here.
   addEventListener("storage", (e) => {
     if (e.key === "ss.demo.db" && getState().session) route();
@@ -425,7 +447,27 @@ function boot() {
   on("auth", () => { /* future: realtime (re)subscribe here */ });
 
   loadSession();
-  if (getState().session) renderShell(); else renderGate();
+  if (getState().session) {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      renderShell();
+    } else {
+      // the standard's launch sequence applies to warm sessions too:
+      // brand mark -> (already authenticated) -> role dashboard
+      root.innerHTML = `
+        <div class="splash" aria-hidden="true">
+          <div class="sp-core">
+            <img class="sp-mark" src="brand/logo-mark.png" alt="">
+            <i class="sp-rule"></i>
+          </div>
+        </div>`;
+      const sp = root.querySelector(".splash");
+      const goShell = () => { if (sp.isConnected) renderShell(); };
+      sp.addEventListener("click", goShell);
+      setTimeout(goShell, 900);
+    }
+  } else {
+    renderGate();
+  }
 }
 
 boot();
