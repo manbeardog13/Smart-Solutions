@@ -489,12 +489,16 @@ a{color:var(--red);text-underline-offset:3px}
 .stage .panel:nth-of-type(4){animation-delay:.21s}
 @keyframes panel-in{from{opacity:0;filter:blur(12px);transform:translateY(8px) scale(.99)}
   to{opacity:1;filter:blur(0);transform:none}}
-/* a faded catalogue image inside a panel — the thing the panel is about */
-.panel .p-img{position:absolute;right:-2%;bottom:-14%;width:300px;max-width:44%;opacity:.12;
-  pointer-events:none;
-  -webkit-mask:linear-gradient(115deg,transparent 6%,#000 48%);
-          mask:linear-gradient(115deg,transparent 6%,#000 48%)}
-:root[data-theme="dark"] .panel .p-img{opacity:.16}
+/* pictured panels: the photo COVERS the whole card, a panel-toned scrim
+   keeps every row readable — text left, photo breathing on the right */
+.p-cover{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;
+  pointer-events:none}
+.p-scrim{position:absolute;inset:0;z-index:0;pointer-events:none;background:
+  linear-gradient(90deg,
+    color-mix(in srgb,var(--panel) 97%,transparent) 34%,
+    color-mix(in srgb,var(--panel) 86%,transparent) 68%,
+    color-mix(in srgb,var(--panel) 68%,transparent) 100%)}
+.panel .p-cover~*:not(.p-scrim):not(.tab-tl):not(.tab-corner){position:relative;z-index:1}
 
 /* ══ hero stage — the ASC dashboard stage, in Operativa terms ══ */
 .hero{position:relative;border-radius:var(--r-card);overflow:hidden;margin-bottom:12px;
