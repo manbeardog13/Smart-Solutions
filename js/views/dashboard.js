@@ -48,7 +48,7 @@ export function render(main, ctx) {
       <button class="hero-num" data-goto="/warehouse" aria-label="Otvori skladište">${esc(String(ready))}<em>${esc(hrCount(ready, ["pozicija spremna", "pozicije spremne", "pozicija spremno"]).replace(/^\d+\s*/, ""))}</em></button>
       <div class="cap">${esc(String(items.length))} artikala na stanju · ${esc(status)}</div>
       <div class="meter"><i style="width:${pct}%"></i></div>
-      <span class="tab-corner">danas · Dubrovnik</span>
+      <span class="tab-corner"><i class="live-dot" aria-hidden="true"></i>Live</span>
     </section>
     <div class="cards deal">
       ${order.sort((a, b) => a.i - b.i).map((c) => `
@@ -57,23 +57,17 @@ export function render(main, ctx) {
           <div class="meta">${esc(c.meta)}</div><div class="v">${esc(c.v)}</div>
         </button>`).join("")}
     </div>
-    <div class="panel tabbed">
+    <div class="panel tabbed roomy">
       <h2 class="tab-tl">Traži pažnju</h2>
       ${low.length === 0 ? `<div class="row"><div class="b"><div class="n">Sve je pod kontrolom.</div></div></div>`
         : low.map((it) => canWarehouse ? `
         <button class="row" data-goto-item="${esc(it.id)}">
-          ${thumb(it)}
-          <span class="b"><span class="n">${esc(it.name)}</span>
-            <span class="a">${esc(it.loc)}</span></span>
-          <span class="badge-low">Nisko</span>
+          <span class="b"><span class="n">${esc(it.name)}</span></span>
           <span class="rt"><span class="big">${esc(String(it.qty))}</span>
             <span class="ag">min ${esc(String(it.min))}</span></span>
         </button>` : `
         <div class="row">
-          ${thumb(it)}
-          <span class="b"><span class="n">${esc(it.name)}</span>
-            <span class="a">${esc(it.loc)}</span></span>
-          <span class="badge-low">Nisko</span>
+          <span class="b"><span class="n">${esc(it.name)}</span></span>
           <span class="rt"><span class="big">${esc(String(it.qty))}</span>
             <span class="ag">min ${esc(String(it.min))}</span></span>
         </div>`).join("")}
