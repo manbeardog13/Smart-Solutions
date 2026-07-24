@@ -252,10 +252,10 @@ function renderShell(freshLogin = false) {
     <div class="appwrap">
       <main class="shell">
         <header class="top">
-          <button class="sb-burger" data-burger aria-label="Otvori izbornik" aria-expanded="false">
-            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+          <button class="brand-btn" data-burger aria-label="Izbornik" aria-expanded="false">
+            <img class="brand-mark" src="brand/logo-mark.png" alt="">
           </button>
-          <img class="top-logo" src="brand/logo-full.png" alt="smart solutions">
+          <img class="top-word" src="brand/logo-word.png" alt="smart solutions">
           <h1 id="page-title" class="pgt" tabindex="-1">Ploča</h1>
           ${db.isLive() ? "" : '<span class="demo-badge">Demo</span>'}
         </header>
@@ -296,8 +296,14 @@ function renderShell(freshLogin = false) {
     try { localStorage.setItem(SIDE_KEY, now); } catch { /* fine */ }
   };
 
-  // Phone: hamburger opens the same sidebar as a left overlay with a scrim.
+  // The SS mark is the menu control: phone opens the left overlay, desktop
+  // toggles the icon rail. Every press gets the spring kick animation.
   const burger = root.querySelector("[data-burger]");
+  const kick = () => {
+    burger.classList.remove("kick");
+    void burger.offsetWidth; // restart the animation on rapid presses
+    burger.classList.add("kick");
+  };
   const setSide = (open) => {
     const was = html.classList.contains("side-open");
     html.classList.toggle("side-open", open);
@@ -311,7 +317,16 @@ function renderShell(freshLogin = false) {
       burger.focus({ preventScroll: true });
     }
   };
-  burger.onclick = () => setSide(!html.classList.contains("side-open"));
+  burger.onclick = () => {
+    kick();
+    if (matchMedia("(max-width: 1020px)").matches) {
+      setSide(!html.classList.contains("side-open"));
+    } else {
+      const now = html.getAttribute("data-side") === "rail" ? "full" : "rail";
+      html.setAttribute("data-side", now);
+      try { localStorage.setItem(SIDE_KEY, now); } catch { /* fine */ }
+    }
+  };
   root.querySelector("[data-scrim]").onclick = () => setSide(false);
 
   root.querySelectorAll(".sb-item[data-route]").forEach((btn) => {

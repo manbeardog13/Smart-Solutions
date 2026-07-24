@@ -29,6 +29,13 @@ parity tooling, copied from `manbeardog13/Smart-Solutions`:
    never cut it.
 4. The logon + splash implementation from the `mbd-design-language` skill,
    re-tinted to the client brand (accent color, logo, city line).
+5. **Asset photos, automatically.** When ANY inventory asset is added,
+   attach a real photo before shipping: company catalogue first;
+   otherwise search online (e.g. Wikimedia Commons API) and import a
+   close-enough real photo — never a drawn render, icon, or initial
+   tile. Record provenance in `catalogue/images/parts/SOURCES.md`.
+   Lists show no location codes or status badges — the quantity number
+   carries the state (brand-red when below minimum).
 
 ## Architecture (ASC pattern — do not reinvent)
 

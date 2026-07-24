@@ -21,7 +21,7 @@ export function render(main, ctx) {
       <input id="wh-q" placeholder="Traži artikl, šifru, dobavljača…" value="${esc(query)}"
              autocomplete="off" aria-label="Pretraga skladišta">
     </div>
-    <div class="panel tabbed">
+    <div class="panel tabbed roomy">
       <img class="p-img" src="catalogue/images/aquarea-range.png" alt="">
       <h2 class="tab-tl">Skladište</h2>
       <span class="tab-corner" id="wh-count"></span>
@@ -89,10 +89,8 @@ function rowHTML(it) {
   return `
     <div class="row">
       ${thumb(it)}
-      <span class="b"><span class="n">${esc(it.name)}</span>
-        <span class="a">${esc(it.loc)}</span></span>
-      ${isLowStock(it) ? '<span class="badge-low">Nisko</span>' : ""}
-      <span class="rt"><span class="big">${esc(String(it.qty))}</span>
+      <span class="b"><span class="n">${esc(it.name)}</span></span>
+      <span class="rt"><span class="big${isLowStock(it) ? " low" : ""}">${esc(String(it.qty))}</span>
         <span class="ag">min ${esc(String(it.min))}</span></span>
       <span class="rt acts-inline">
         <input class="qin" data-q="${esc(it.id)}" type="number" min="1" value="1"
@@ -161,12 +159,11 @@ function renderDetail(main, ctx) {
       <div class="row">
         ${thumb(item, "detail-img")}
         <span class="b"><span class="n">${esc(item.name)}</span>
-          <span class="a">${esc(item.loc)} · ${esc(item.supplier)}</span>
+          <span class="a">${esc(item.supplier)}</span>
           ${mismatch ? `<span class="a warn">⚠ Naljepnica navodi drugog dobavljača
             (${esc(stickerSupplier)}) — vrijedi podatak iz baze.</span>` : ""}</span>
-        ${low ? '<span class="badge-low">Nisko</span>' : ""}
-        <span class="rt"><span class="big">${esc(String(item.qty))}</span>
-          <span class="ag">na stanju · min ${esc(String(item.min))}</span></span>
+        <span class="rt"><span class="big${low ? " low" : ""}">${esc(String(item.qty))}</span>
+          <span class="ag">min ${esc(String(item.min))}</span></span>
       </div>
       <div class="row" style="gap:8px">
         <input class="qin" id="d-qty" type="number" min="1" value="1"
