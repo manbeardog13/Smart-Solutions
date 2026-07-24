@@ -47,8 +47,11 @@ const SPEC = [
 async function measure(url, which) {
   const browser = await chromium.launch({ executablePath: BIN });
   const page = await browser.newPage({ viewport: { width: VW, height: VH } });
+  // Final Frame Contract: reduced motion skips every timeline, so both apps
+  // sit on their exact static design — deterministic geometry, no mid-tween.
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto(url);
-  await page.waitForTimeout(4500); // both splashes settled, entrance done
+  await page.waitForTimeout(1200); // fonts + layout settled
   const spec = SPEC.map(({ key, closest, ...s }) => ({ key, sel: s[which], closest }));
   const out = await page.evaluate((rows) => {
     const res = {};

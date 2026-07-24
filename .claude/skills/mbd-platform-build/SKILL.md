@@ -27,8 +27,13 @@ parity tooling, copied from `manbeardog13/Smart-Solutions`:
    size, side gaps, stacking gaps, fonts and radii. Only brand-intrinsic
    metrics are exempt (logo aspect, text-metric edges). Scale the card —
    never cut it.
-4. The logon + splash implementation from the `mbd-design-language` skill,
-   re-tinted to the client brand (accent color, logo, city line).
+4. The logon + startup-cinematic implementation from the
+   `mbd-design-language` skill, re-tinted to the client brand (accent
+   color, logo, city line): copy `js/motion.js` + `js/vendor/gsap.min.js`
+   (the one authorized animation dependency), import a full-viewport
+   photo of the client's city for the logon backdrop (light + dusk,
+   provenance in `brand/SOURCES.md`), and slice the client's mark into
+   its natural bands for the assembly + rails transitions.
 5. **Asset photos, automatically.** When ANY inventory asset is added,
    attach a real photo before shipping: company catalogue first;
    otherwise search online (e.g. Wikimedia Commons API) and import a
