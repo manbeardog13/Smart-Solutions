@@ -95,7 +95,8 @@ export function parseQrPayload(text) {
 // The application always knows what device it is on. Ultrawide gets the
 // 80dvw stage; everything else fills the viewport edge to edge.
 export function deviceClass(width) {
-  // Boundaries match css/app.css media queries exactly (<=700 is phone there).
+  // 700/1100 match css/app.css media queries exactly; 1800 (ultrawide) is a
+  // JS-only class — CSS reads it from <body> rather than a media query.
   if (width <= 700) return "phone";
   if (width <= 1100) return "tablet";
   if (width < 1800) return "desktop";

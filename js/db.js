@@ -10,6 +10,15 @@ import { DEMO_ITEMS, DEMO_ORDERS, DEMO_MOVEMENTS, DEMO_USERS } from "./data.js";
 import { reorderProposal } from "./domain.js";
 
 const DB_KEY = "ss.demo.db";
+// Bump whenever seed shape or content changes: stale blobs from older
+// installs re-seed instead of crashing views that expect the new shape.
+const DB_VERSION = 3;
+
+// Same-millisecond writes must still get unique ids.
+let idSeq = 0;
+function nextId(prefix) {
+  return `${prefix}${Date.now().toString(36)}${(++idSeq).toString(36)}`;
+}
 
 // structuredClone is missing on older warehouse handhelds — degrade politely.
 export function clone(value) {
@@ -20,6 +29,7 @@ export function clone(value) {
 
 function seed() {
   return {
+    v: DB_VERSION,
     items: clone(DEMO_ITEMS),
     orders: clone(DEMO_ORDERS),
     movements: clone(DEMO_MOVEMENTS),
@@ -31,7 +41,11 @@ function seed() {
 function load() {
   try {
     const raw = JSON.parse(localStorage.getItem(DB_KEY));
-    if (raw && raw.items) return raw;
+    if (raw && raw.v === DB_VERSION &&
+        Array.isArray(raw.items) && Array.isArray(raw.orders) &&
+        Array.isArray(raw.movements) && Array.isArray(raw.placedOrders)) {
+      return raw;
+    }
   } catch { /* re-seed */ }
   const fresh = seed();
   try { save(fresh); } catch { /* boot must survive a full storage; run in-memory */ }
@@ -75,7 +89,7 @@ export function adjustQty(itemId, delta, who) {
     return item;
   }
   db.movements.unshift({
-    id: "m" + Date.now(),
+    id: nextId("m"),
     ts: new Date().toLocaleString("hr-HR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }),
     who: who || "—",
     what: applied >= 0 ? "Zaprimljeno" : "Izdano na teren",
@@ -107,7 +121,7 @@ export function placeReorder(itemId) {
   if (existing) return existing;
   const proposal = reorderProposal(item);
   if (!proposal) throw new Error("Artikl nije ispod minimuma.");
-  const order = { ...proposal, id: "N-" + Date.now(), placedAt: new Date().toISOString() };
+  const order = { ...proposal, id: nextId("N-"), placedAt: new Date().toISOString() };
   db.placedOrders.unshift(order);
   save(db);
   return order;

@@ -9,6 +9,15 @@
 <link rel="apple-touch-icon" sizes="180x180" href="brand/apple-touch-180.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="stylesheet" href="css/app.css">
+<script>
+// Before first paint: honor the stored theme (or the OS) so dark-mode users
+// never get a white flash while the module graph loads.
+try {
+  var t = JSON.parse(localStorage.getItem("ss.theme"));
+  if (t === null || t === undefined) t = matchMedia("(prefers-color-scheme: dark)").matches;
+  document.documentElement.setAttribute("data-theme", t ? "dark" : "light");
+} catch (e) { /* default light */ }
+</script>
 </head>
 <body>
 <!-- Splash: shown immediately, replaced by the login gate or the app shell. -->

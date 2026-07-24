@@ -6,8 +6,9 @@ and role-based interfaces — owner, field technician (big-controls mode),
 and warehouse staff. Croatian UI. Premium glass design language, light and
 dark themes, splash → login → dealt-cards dashboard entrance.
 
-Modeled on the **ASC platform build** (`manbeardog13/ASC`): a static PWA
-with no build step — plain ES modules — designed for Supabase
+Modeled on the **ASC platform build** (`manbeardog13/ASC`): a static web
+app with no build step — plain ES modules, installable manifest; a
+service worker (offline) is on the roadmap — designed for Supabase
 (Postgres + Auth + RLS + Realtime) and free GitHub Pages hosting. Until
 Supabase credentials are set in `js/config.js`, the app runs in **demo
 mode**: demo accounts and localStorage persistence.
@@ -27,7 +28,7 @@ technician, Ana = warehouse), and explore.
 
 ```
 for f in $(find js -name '*.js'); do node --check "$f"; done
-node --test tests/*.test.mjs
+node --test tests/*.test.mjs   # requires Node >= 22 (CI pins 22)
 ```
 
 CI (`.github/workflows/ci.yml`) runs the same on every push.

@@ -27,12 +27,11 @@ test("session persists across reloads", () => {
 });
 
 test("logout clears the session AND all protected data (incl. Gemini cache)", () => {
-  const s = fakeStorage({
-    "ss.protected.notes": "x",
-    "ss.gemini.context": "chat history",
-    "ss.theme": "true",
-  });
+  const s = fakeStorage({ "ss.theme": "true" });
   signIn(vido, s);
+  // protected data written DURING the session must be wiped by signOut
+  s.setItem("ss.protected.notes", "x");
+  s.setItem("ss.gemini.context", "chat history");
   signOut(s);
   assert.equal(loadSession(s), null);
   const left = s._dump();

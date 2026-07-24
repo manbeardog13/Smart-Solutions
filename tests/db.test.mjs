@@ -60,4 +60,31 @@ test("adjustQty clamps at zero and logs only what actually moved", () => {
   const last = db.listMovements()[0];
   assert.equal(last.qty, 2);
   assert.equal(last.what, "Zaprimljeno");
+  // The clamp itself: a partial issue applies only what exists.
+  const clamped = db.adjustQty("SS-0001", -100, "Marko");
+  assert.equal(clamped.qty, 0);
+  assert.equal(db.listMovements()[0].qty, -6); // applied, not requested
+});
+
+test("receipt landing exactly AT the minimum keeps the reorder open", () => {
+  db.placeReorder("SS-0005"); // qty 8, min 10
+  db.adjustQty("SS-0005", +2, "Ana"); // 10 == min → delivery not sufficient yet
+  assert.ok(db.openReorderFor("SS-0005"), "order must stay open at qty == min");
+});
+
+test("ids are unique even for same-millisecond writes", () => {
+  db.adjustQty("SS-0004", +1, "Ana");
+  db.adjustQty("SS-0004", +1, "Ana");
+  db.adjustQty("SS-0004", +1, "Ana");
+  const ids = db.listMovements().map((m) => m.id);
+  assert.equal(new Set(ids).size, ids.length);
+});
+
+test("stale or partial persisted blobs re-seed instead of crashing", () => {
+  localStorage.setItem("ss.demo.db", JSON.stringify({ items: [{ id: "x" }] }));
+  const items = db.listItems(); // old shape (no version) → fresh seed
+  assert.ok(items.length >= 7);
+  assert.ok(Array.isArray(db.listPlacedOrders()));
+  localStorage.setItem("ss.demo.db", "not json at all");
+  assert.ok(db.listItems().length >= 7);
 });

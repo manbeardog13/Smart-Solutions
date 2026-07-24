@@ -43,6 +43,8 @@ button{font-family:inherit;color:inherit;background:none;border:0;cursor:pointer
 :focus-visible{outline:2px solid var(--red);outline-offset:2px}
 a{color:var(--red);text-underline-offset:3px}
 .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;
+         clip:rect(0 0 0 0);white-space:nowrap;border:0}
 ::selection{background:var(--red);color:#fff}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
@@ -247,7 +249,7 @@ main{min-height:100dvh;padding-left:var(--rail);transition:padding-left .2s var(
 .card .v{font-family:var(--display);font-weight:900;font-size:36px;letter-spacing:-.05em;
          line-height:.95;margin-top:7px;font-variant-numeric:tabular-nums}
 .card.alarm{background:var(--red);border-color:transparent;color:#fff}
-.card.alarm .meta{color:rgba(255,255,255,.85)}
+.card.alarm .meta{color:#fff}
 .card.alarm::before{background:#fff}
 /* dealt entrance: cards fly in from center, pairs left/right, ≤620 ms */
 .deal .card{animation:deal .26s var(--snap) both;animation-delay:var(--deal-delay,0ms)}
@@ -288,7 +290,7 @@ main{min-height:100dvh;padding-left:var(--rail);transition:padding-left .2s var(
 
 /* ══ right utility shelf — hidden capsule, revealed at the edge ══ */
 .shelf{position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:35;display:flex;
-       align-items:center}
+       flex-direction:row-reverse;align-items:center}
 /* the handle is a real button: 44px-wide touch/keyboard target, slim visual */
 .shelf .handle{width:44px;height:88px;padding:0;border:0;background:none;position:relative;
                cursor:pointer;display:block}
@@ -296,7 +298,7 @@ main{min-height:100dvh;padding-left:var(--rail);transition:padding-left .2s var(
                width:5px;height:74px;border-radius:4px 0 0 4px;background:var(--red);opacity:.45;
                transition:opacity var(--t) linear}
 .shelf:hover .handle::after,.shelf:focus-within .handle::after,
-.shelf.open .handle::after{opacity:0}
+.shelf.open .handle::after{opacity:.18}
 .shelf .capsule{display:flex;flex-direction:column;gap:6px;padding:10px 8px;margin-right:-84px;
         border-radius:18px 0 0 18px;background:var(--glass2);border:1px solid var(--line);box-shadow:var(--shadow-2);
         border-right:0;backdrop-filter:blur(26px) saturate(190%);
@@ -326,7 +328,7 @@ main{min-height:100dvh;padding-left:var(--rail);transition:padding-left .2s var(
 .acts-inline{display:flex;gap:6px}
 .btn-sq{width:auto;min-width:44px;min-height:44px;padding:9px 13px}
 .btn-sq.wide{min-width:88px}
-.btn-sq:disabled{opacity:.55;cursor:default}
+.btn:disabled{opacity:.55;cursor:default;transform:none}
 
 /* honest placeholder for items without catalogue photography */
 .thumb-ph{width:44px;height:44px;flex:0 0 44px;border-radius:9px;display:grid;place-items:center;
@@ -335,8 +337,8 @@ main{min-height:100dvh;padding-left:var(--rail);transition:padding-left .2s var(
 .thumb-ph.detail-img{width:84px;height:84px;flex-basis:84px;font-size:28px;border-radius:14px}
 
 /* ══ scanned-item detail ══ */
-.detail-img{width:84px;height:84px;flex:0 0 84px;border-radius:14px;object-fit:cover;
-            background:var(--sunk)}
+.row img.detail-img,.detail-img{width:84px;height:84px;flex:0 0 84px;border-radius:14px;
+            object-fit:cover;background:var(--sunk)}
 .a.warn{color:var(--red-d);font-weight:800}
 :root[data-theme="dark"] .a.warn{color:#FF8A99}
 

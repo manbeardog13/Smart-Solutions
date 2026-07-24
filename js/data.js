@@ -39,8 +39,8 @@ export const DEMO_ORDERS = [
 ];
 
 export const DEMO_MOVEMENTS = [
-  { id: "m1", ts: "08:12", who: "Ana", what: "Zaprimljeno", item: "SS-0004", qty: +100 },
-  { id: "m2", ts: "09:40", who: "Marko", what: "Izdano na teren", item: "SS-0003", qty: -16 },
-  { id: "m3", ts: "11:05", who: "Ana", what: "Povrat s terena", item: "SS-0005", qty: +2 },
-  { id: "m4", ts: "12:30", who: "Marko", what: "Izdano na teren", item: "SS-0001", qty: -1 },
+  { id: "m1", ts: "23.07. 08:12", who: "Ana", what: "Zaprimljeno", item: "SS-0004", qty: +100 },
+  { id: "m2", ts: "23.07. 09:40", who: "Marko", what: "Izdano na teren", item: "SS-0003", qty: -16 },
+  { id: "m3", ts: "23.07. 11:05", who: "Ana", what: "Povrat s terena", item: "SS-0005", qty: +2 },
+  { id: "m4", ts: "23.07. 12:30", who: "Marko", what: "Izdano na teren", item: "SS-0001", qty: -1 },
 ];

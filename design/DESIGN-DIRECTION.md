@@ -39,8 +39,10 @@ on the Smart Solutions logo (`brand/smart-solutions-logo.png`,
 Reference: `design/inspiration/glass-sidebar-concept.jpeg` (Netflix-style
 frosted rail). Locked decisions:
 
-- Fixed **left-edge rail**: ~72 px collapsed, ~280 px expanded. It never
-  pushes, shifts, or makes the dashboard "swim."
+- Fixed **left-edge rail**: ~72 px collapsed, ~280 px expanded. Hover
+  reveal overlays the stage without pushing it. (Amendment 2026-07-24:
+  an explicit **pin** keeps the rail open and the stage smoothly makes
+  room — a deliberate, user-initiated layout change, not "swim.")
 - **Desktop**: moving the pointer to the left edge reveals the menu with a
   fast, silky animation. Clicking can pin it open; selecting an item
   navigates immediately.
@@ -56,8 +58,10 @@ frosted rail). Locked decisions:
 Reference: `design/inspiration/hardware-side-button-concept.jpeg`
 (buttons that emerge from the device edge). Locked decisions:
 
-- A separate **curved utility shelf emerges from the right edge** of the
-  Dashboard holding app shortcuts: Spotify, Instagram, Facebook, Gmail.
+- A separate **curved utility shelf emerges from the right edge**
+  holding app shortcuts: Spotify, Instagram, Facebook, Gmail.
+  (Amendment 2026-07-24: available on every signed-in view, not just the
+  Dashboard — same behavior everywhere beats a per-view surprise.)
 - At rest only a subtle edge handle / underglow is visible. Moving the
   pointer toward it reveals a compact glass capsule with the app buttons.
 - Icons stay monochrome until hovered; brand colors soften in on hover.
@@ -70,9 +74,11 @@ Reference: `design/inspiration/hardware-side-button-concept.jpeg`
 
 ## Motion
 
-- Every transition animated, **nonlinear** easing, fast and snappy —
-  approximately **180–260 ms** — giving the feel of instantaneous
-  response.
+- Every interaction transition animated, **nonlinear** easing, fast and
+  snappy — approximately **180–260 ms** — giving the feel of
+  instantaneous response. (Clarification 2026-07-24: the band governs
+  interaction feedback. Entrances are separately specified: splash
+  ~800 ms, gate hand-off ~340 ms, dashboard deal ≤620 ms.)
 - Transform and opacity only; no layout-shift animation; no excessive
   bouncing. Immediate and physical.
 - Keyboard focus and an explicit touch handle provide the same reveal

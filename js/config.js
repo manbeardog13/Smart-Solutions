@@ -21,9 +21,9 @@ export function isConfigured() {
   );
 }
 
-// The base URL baked into printed QR stickers. Stickers outlive hosting
-// setups, so prefer the deployment the app is actually served from over the
-// hardcoded constant; the constant remains the fallback for file:// and tests.
+// The base URL baked into printed QR stickers: the deployment the app is
+// actually served from (so stickers always point at the live host), with
+// the constant as the fallback for non-http contexts (file://, tests).
 export function appBaseUrl() {
   if (typeof location !== "undefined" && /^https?:$/.test(location.protocol)) {
     return location.origin + location.pathname.replace(/[^/]*$/, "");

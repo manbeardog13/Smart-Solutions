@@ -2,7 +2,7 @@
 // views/orders.js — work orders (radni nalozi) + placed part reorders.
 // ============================================================================
 import * as db from "../db.js";
-import { esc, icon, thumb } from "../ui.js";
+import { esc, icon, thumb, hrCount } from "../ui.js";
 
 export function render(main) {
   const orders = db.listOrders();
@@ -11,7 +11,7 @@ export function render(main) {
   main.innerHTML = `
     <div class="panel">
       <div class="ph">${icon("order")}<h2>Radni nalozi</h2>
-        <span class="meta" style="margin-left:auto">${orders.length} otvorenih</span></div>
+        <span class="meta" style="margin-left:auto">${hrCount(orders.length, ["otvoren", "otvorena", "otvorenih"])}</span></div>
       ${orders.map((o) => `
         <div class="row">
           <span class="b"><span class="n">${esc(o.client)} — ${esc(o.task)}</span>

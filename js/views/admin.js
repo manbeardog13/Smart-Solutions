@@ -11,13 +11,14 @@ export function render(main) {
   const editableRoles = ROLES.filter((r) => r !== "vlasnik");
   const allViews = DEFAULT_VISIBILITY.vlasnik;
 
+  const ROLE_TITLES = { majstor: "Majstor", skladistar: "Skladištar" };
   main.innerHTML = `
     <div class="panel">
       <div class="ph">${icon("admin")}<h2>Vidljivost po ulozi</h2>
         <span class="meta" style="margin-left:auto">vlasnik uvijek vidi sve</span></div>
       ${editableRoles.map((role) => `
         <div class="row" style="align-items:flex-start">
-          <span class="b"><span class="n" style="text-transform:capitalize">${esc(role)}</span>
+          <span class="b"><span class="n">${esc(ROLE_TITLES[role] || role)}</span>
             <span class="a">odaberi dostupne dijelove platforme</span>
             <span style="display:flex;flex-wrap:wrap;gap:7px;margin-top:9px">
             ${allViews.filter((v) => v !== "admin").map((v) => {
@@ -28,6 +29,7 @@ export function render(main) {
               <button class="btn ${on ? "btn-red" : "btn-ghost"}"
                       style="width:auto;padding:9px 13px;font-size:12px"
                       role="switch" aria-checked="${on}" ${v === "dashboard" ? "disabled" : ""}
+                      aria-label="${esc(VIEW_LABELS[v])} — ${esc(ROLE_TITLES[role] || role)}"
                       data-role="${esc(role)}" data-view="${esc(v)}">${esc(VIEW_LABELS[v])}</button>`;
             }).join("")}
             </span>
@@ -47,7 +49,7 @@ export function render(main) {
       visibility[role] = [...set];
       try {
         db.setVisibilityOverride(visibility);
-        toast("Spremljeno. Vrijedi kod sljedeće prijave te uloge.");
+        toast("Spremljeno. Primjenjuje se pri sljedećoj navigaciji te uloge.");
       } catch (err) { toast(err.message); }
       render(main);
     };

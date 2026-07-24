@@ -11,7 +11,8 @@ import { qrPayload } from "../domain.js";
 import { appBaseUrl } from "../config.js";
 import { esc, icon, toast, thumb } from "../ui.js";
 
-export function render(main) {
+export function render(main, ctx) {
+  const canWarehouse = (ctx.views || []).includes("warehouse");
   const items = db.listItems();
   const base = appBaseUrl();
   main.innerHTML = `
@@ -20,14 +21,20 @@ export function render(main) {
       <div class="row"><span class="b">
         <span class="n">Skeniraj naljepnicu kamerom telefona</span>
         <span class="a">QR je URL — otvara točan artikl i nosi dobavljača.
-          Demo: odaberi artikl za simulaciju skena.</span></span></div>
-      ${items.map((it) => `
+          ${canWarehouse ? "Demo: odaberi artikl za simulaciju skena."
+            : "Tvoja uloga nema pristup skladištu — sken prikazuje samo naljepnicu."}</span></span></div>
+      ${items.map((it) => canWarehouse ? `
         <button class="row" data-scan="${esc(it.id)}" data-supplier="${esc(it.supplier)}">
           ${thumb(it)}
           <span class="b"><span class="n">${esc(it.name)}</span>
             <span class="a mono" style="text-transform:none">${esc(qrPayload(it, base))}</span></span>
           <span class="rt"><span class="ag">simuliraj sken</span></span>
-        </button>`).join("")}
+        </button>` : `
+        <div class="row">
+          ${thumb(it)}
+          <span class="b"><span class="n">${esc(it.name)}</span>
+            <span class="a mono" style="text-transform:none">${esc(qrPayload(it, base))}</span></span>
+        </div>`).join("")}
     </div>
     <div class="panel">
       <div class="ph">${icon("box")}<h2>Nova naljepnica — veliki dijelovi</h2></div>

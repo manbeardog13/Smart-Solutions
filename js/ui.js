@@ -50,16 +50,35 @@ let toastTimer = null;
 export function toast(message) {
   let el = document.getElementById("toast");
   if (!el) {
+    // index.html ships the live region; this branch only heals a stale shell.
     el = document.createElement("div");
     el.id = "toast";
     el.className = "toast";
     el.setAttribute("role", "status");
+    el.setAttribute("aria-live", "polite");
     document.body.appendChild(el);
   }
+  // A repeated identical message must still be announced.
+  el.textContent = "";
   el.textContent = message;
   el.classList.add("on");
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => el.classList.remove("on"), 2600);
+}
+
+// Visually-hidden announcements for actions whose visual feedback is the
+// row itself (qty changes, filtered counts).
+export function announce(message) {
+  let el = document.getElementById("sr-announce");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "sr-announce";
+    el.className = "sr-only";
+    el.setAttribute("aria-live", "polite");
+    document.body.appendChild(el);
+  }
+  el.textContent = "";
+  el.textContent = message;
 }
 
 export function setThemeColor(dark) {

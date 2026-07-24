@@ -5,7 +5,7 @@
 // ============================================================================
 import * as db from "../db.js";
 import { isLowStock, reorderProposal, parseQrPayload } from "../domain.js";
-import { esc, icon, toast, hrCount, thumb } from "../ui.js";
+import { esc, icon, toast, hrCount, thumb, announce } from "../ui.js";
 
 let query = "";
 let queryOwner = null; // one user's search never leaks to the next
@@ -33,7 +33,11 @@ export function render(main, ctx) {
   // Search re-renders ONLY the list, so the input (and its caret) is never
   // touched — no full-view teardown per keystroke.
   const input = main.querySelector("#wh-q");
-  input.oninput = () => { query = input.value; renderList(main, ctx); };
+  input.oninput = () => {
+    query = input.value;
+    renderList(main, ctx);
+    announce(main.querySelector("#wh-count").textContent);
+  };
   renderList(main, ctx);
 }
 
@@ -62,12 +66,20 @@ function refresh(main, ctx) {
   if (focusKey) {
     const attr = "data-" + focusKey.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase());
     const again = main.querySelector(`[${attr}${focusVal ? `="${CSS.escape(focusVal)}"` : ""}]`);
-    if (again) again.focus({ preventScroll: true });
+    // The acted button may be gone (e.g. Naruči became Naručeno) — land on
+    // the search field rather than dropping keyboard users onto <body>.
+    (again || main.querySelector("#wh-q"))?.focus({ preventScroll: true });
   }
 }
 
-function act(main, ctx, fn) {
-  try { fn(); } catch (err) { toast(err.message); }
+function act(main, ctx, fn, itemId) {
+  try {
+    fn();
+    if (itemId) {
+      const it = db.getItem(itemId);
+      if (it) announce(`${it.name}: stanje ${it.qty}`);
+    }
+  } catch (err) { toast(err.message); }
   refresh(main, ctx);
 }
 
@@ -93,12 +105,19 @@ function rowHTML(it) {
 
 function wireRowActions(scope, main, ctx) {
   scope.querySelectorAll("[data-recv]").forEach((b) => b.onclick = () =>
-    act(main, ctx, () => db.adjustQty(b.dataset.recv, +1, ctx.session.name)));
+    act(main, ctx, () => db.adjustQty(b.dataset.recv, +1, ctx.session.name), b.dataset.recv));
   scope.querySelectorAll("[data-issue]").forEach((b) => b.onclick = () =>
-    act(main, ctx, () => db.adjustQty(b.dataset.issue, -1, ctx.session.name)));
+    act(main, ctx, () => db.adjustQty(b.dataset.issue, -1, ctx.session.name), b.dataset.issue));
   scope.querySelectorAll("[data-reorder]").forEach((b) => b.onclick = () => {
+    // The row may be stale (another tab or the detail panel changed stock).
     const item = db.getItem(b.dataset.reorder);
-    confirmReorder(main, ctx, item, reorderProposal(item));
+    const proposal = item ? reorderProposal(item) : null;
+    if (!proposal || db.openReorderFor(item.id)) {
+      toast("Stanje se promijenilo — narudžba više nije potrebna.");
+      refresh(main, ctx);
+      return;
+    }
+    confirmReorder(main, ctx, item, proposal);
   });
 }
 
@@ -125,7 +144,7 @@ function renderDetail(main, ctx) {
   const proposal = low && !ordered ? reorderProposal(item) : null;
 
   target.innerHTML = `
-    <div class="panel detail">
+    <div class="panel">
       <div class="ph">${icon("scan")}<h2>Skenirani artikl</h2>
         <span class="meta mono" style="margin-left:auto">${esc(item.id)}</span></div>
       <div class="row">
@@ -147,14 +166,12 @@ function renderDetail(main, ctx) {
     </div>`;
 
   target.querySelector("[data-d-recv]").onclick = () =>
-    act(main, ctx, () => db.adjustQty(item.id, +1, ctx.session.name));
+    act(main, ctx, () => db.adjustQty(item.id, +1, ctx.session.name), item.id);
   target.querySelector("[data-d-issue]").onclick = () =>
-    act(main, ctx, () => db.adjustQty(item.id, -1, ctx.session.name));
+    act(main, ctx, () => db.adjustQty(item.id, -1, ctx.session.name), item.id);
   const orderBtn = target.querySelector("[data-d-order]");
-  if (orderBtn) orderBtn.onclick = () => act(main, ctx, () => {
-    const o = db.placeReorder(item.id);
-    toast(`Narudžba poslana: ${item.name} × ${o.quantity} (${o.supplier})`);
-  });
+  // Ordering always goes through the same confirmation dialog.
+  if (orderBtn) orderBtn.onclick = () => confirmReorder(main, ctx, item, proposal);
 }
 
 // ---- Reorder confirmation ---------------------------------------------------
@@ -180,7 +197,19 @@ function confirmReorder(main, ctx, item, proposal) {
     if (restoreFocus && previouslyFocused && previouslyFocused.isConnected) previouslyFocused.focus();
   };
   scrim._close = close; // router/logout cleanup goes through here (no leaks)
-  const onKey = (e) => { if (e.key === "Escape") close(); };
+  const onKey = (e) => {
+    if (e.key === "Escape") { close(); return; }
+    if (e.key === "Tab") {
+      // Two focusables; keep Tab cycling inside the dialog.
+      const focusables = [...scrim.querySelectorAll("button")];
+      const idx = focusables.indexOf(document.activeElement);
+      e.preventDefault();
+      const next = e.shiftKey
+        ? focusables[(idx - 1 + focusables.length) % focusables.length]
+        : focusables[(idx + 1) % focusables.length];
+      next.focus();
+    }
+  };
   document.addEventListener("keydown", onKey);
   scrim.querySelector("[data-cancel]").onclick = () => close();
   scrim.addEventListener("click", (e) => { if (e.target === scrim) close(); });
@@ -190,9 +219,7 @@ function confirmReorder(main, ctx, item, proposal) {
       toast(`Narudžba poslana: ${item.name} × ${o.quantity} (${o.supplier})`);
     } catch (err) { toast(err.message); }
     close(false);          // the old row button is about to be replaced
-    refresh(main, ctx);    // repaint list + detail, then land focus sanely
-    const first = main.querySelector("#wh-q");
-    if (first) first.focus({ preventScroll: true });
+    refresh(main, ctx);    // repaint list + detail; refresh() lands focus sanely
   };
   scrim.querySelector("[data-place]").focus();
 }

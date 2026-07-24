@@ -7,7 +7,7 @@
 import { getState, setState, loadSession, signIn, signOut, on } from "./store.js";
 import { viewsForRole, isFieldRole, deviceClass, VIEW_LABELS } from "./domain.js";
 import * as db from "./db.js";
-import { esc, icon, go, setThemeColor } from "./ui.js";
+import { esc, icon, go, toast, setThemeColor } from "./ui.js";
 
 const VIEW_DEFS = [
   { key: "dashboard", route: "/", ic: "dash", load: () => import("./views/dashboard.js") },
@@ -77,9 +77,15 @@ const themeButton = () =>
 // ---- Device awareness -------------------------------------------------------
 function applyDevice() {
   const cls = deviceClass(innerWidth);
+  const prev = getState().device;
   document.body.classList.remove("phone", "tablet", "desktop", "ultrawide");
   document.body.classList.add(cls);
   setState({ device: cls });
+  // Crossing the phone boundary swaps the whole nav shape — rebuild the shell.
+  if (prev !== cls && (prev === "phone" || cls === "phone") &&
+      getState().session && document.getElementById("main")) {
+    renderShell();
+  }
 }
 
 // ---- Login gate -------------------------------------------------------------
@@ -121,8 +127,7 @@ function renderGate() {
     </div>`;
 
   syncThemeControls();
-  const soon = () => import("./ui.js").then(({ toast }) =>
-    toast("Dostupno s produkcijskim backendom (Supabase)."));
+  const soon = () => toast("Dostupno s produkcijskim backendom (Supabase).");
   root.querySelector("[data-google]").onclick = soon;
   root.querySelector("[data-forgot]").onclick = soon;
   root.querySelector("[data-create]").onclick = soon;
@@ -140,7 +145,7 @@ function renderGate() {
       gate.classList.add("out");
       let done = false;
       const finish = () => { if (!done) { done = true; renderShell(true); } };
-      gate.addEventListener("animationend", finish, { once: true });
+      gate.addEventListener("animationend", (e) => { if (e.target === gate) finish(); });
       setTimeout(finish, 380); // safety: never strand the user on the gate
     };
   });
@@ -199,13 +204,13 @@ function renderShell(freshLogin = false) {
         <div class="stage" id="main"></div>
       </main>
       <div class="shelf" id="shelf">
+        <button class="handle" data-shelf-toggle aria-expanded="false"
+                aria-label="Brze aplikacije"></button>
         <div class="capsule">
           ${SHELF_APPS.map((a) => `
             <a href="${a.url}" target="_blank" rel="noopener" aria-label="${esc(a.name)}"
                style="--brand:${a.brand}">${a.svg}</a>`).join("")}
         </div>
-        <button class="handle" data-shelf-toggle aria-expanded="false"
-                aria-label="Brze aplikacije"></button>
       </div>
     </div>`;
 
@@ -215,8 +220,12 @@ function renderShell(freshLogin = false) {
     closeScrims();
     signOut();
     document.body.classList.remove("field-mode");
+    const t = document.getElementById("toast");
+    if (t) t.classList.remove("on"); // previous user's last action must not linger
     try { history.replaceState(null, "", location.pathname + location.search); } catch { /* file:// */ }
     renderGate();
+    const card = root.querySelector(".login");
+    if (card) { card.setAttribute("tabindex", "-1"); card.focus({ preventScroll: true }); }
   };
   root.querySelector("[data-home]").onclick = () => go("/");
   root.querySelector("[data-logout]").onclick = logout;
@@ -291,6 +300,9 @@ async function route(freshLogin = false) {
     if (!root.querySelector(".gate")) renderGate();
     return;
   }
+  // A hashchange can arrive while the splash still covers a not-yet-built
+  // shell — build it first; renderShell() re-enters route() itself.
+  if (!currentMain || !document.getElementById("main")) { renderShell(freshLogin); return; }
   closeScrims();
   const seq = ++routeSeq;
   const hash = location.hash.replace(/^#/, "") || "/";
@@ -302,20 +314,25 @@ async function route(freshLogin = false) {
   // view — including item deep links a role cannot open.
   if (hash !== def.route && !(itemMatch && wh)) {
     try { history.replaceState(null, "", "#" + def.route); } catch { /* file:// */ }
-    if (itemMatch && !wh) {
-      import("./ui.js").then(({ toast }) => toast("Nemate pristup skladištu za ovu naljepnicu."));
-    }
+    if (itemMatch && !wh) toast("Nemate pristup skladištu za ovu naljepnicu.");
   }
   setState({ route: def.route });
   document.querySelectorAll(".nl[data-route]").forEach((b) =>
     b.classList.toggle("on", b.dataset.route === def.route));
   const title = document.getElementById("page-title");
   if (title) title.textContent = def.label;
-  const mod = await def.load();
+  let mod;
+  try {
+    mod = await def.load();
+  } catch {
+    if (seq === routeSeq) toast("Učitavanje nije uspjelo — provjeri vezu i pokušaj ponovno.");
+    return;
+  }
   if (seq !== routeSeq || getState().session !== session) return; // superseded
   currentMain.innerHTML = "";
   mod.render(currentMain, {
     session, hash, freshLogin,
+    views: nav.map((v) => v.key),
     itemId: itemMatch && wh ? decodeSafe(itemMatch[1]) : null,
   });
   // Keyboard/screen-reader users land on the new view's title, not in limbo —
@@ -336,6 +353,19 @@ function boot() {
   if (matchMedia("(hover: none)").matches) {
     document.addEventListener("pointerdown", railOutsideCloser, { passive: true });
   }
+  // Another tab changed the shared demo DB or the session — reflect it here.
+  addEventListener("storage", (e) => {
+    if (e.key === "ss.demo.db" && getState().session) route();
+    if (e.key === "ss.session" && !e.newValue && getState().session) {
+      signOut(); renderGate();
+    }
+  });
+  // Follow OS theme changes live unless the user chose a theme explicitly.
+  matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", (e) => {
+    let stored = null;
+    try { stored = JSON.parse(localStorage.getItem(THEME_KEY)); } catch { /* none */ }
+    if (stored === null || stored === undefined) applyTheme(e.matches);
+  });
   document.addEventListener("click", (e) => {
     const t = e.target.closest && e.target.closest("[data-theme-toggle]");
     if (t) toggleTheme();
@@ -352,7 +382,8 @@ function boot() {
   } else {
     setTimeout(() => {
       splash.classList.add("out");
-      splash.addEventListener("animationend", () => splash.remove(), { once: true });
+      splash.addEventListener("animationend", (e) => { if (e.target === splash) splash.remove(); });
+      setTimeout(() => splash.remove(), 500); // belt and braces
       showApp();
     }, 850);
   }
