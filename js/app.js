@@ -25,10 +25,6 @@ const WORD_IMG = `<span class="logo-fx logo-word-fx"><img src="brand/logo-word.p
 
 // Utility shelf targets: real destinations, never a dead click.
 const SHELF_APPS = [
-  { name: "Spotify", url: "https://open.spotify.com", brand: "#1DB954",
-    svg: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm4.6 14.5a.62.62 0 0 1-.86.2c-2.36-1.44-5.33-1.77-8.82-.97a.62.62 0 1 1-.28-1.21c3.82-.88 7.1-.5 9.75 1.12.3.18.39.57.21.86zm1.23-2.72a.78.78 0 0 1-1.07.26c-2.7-1.66-6.82-2.14-10-1.17a.78.78 0 1 1-.46-1.5c3.65-1.1 8.18-.57 11.28 1.34.36.23.48.7.25 1.07zm.1-2.83C14.7 9.03 9.4 8.85 6.32 9.79a.94.94 0 1 1-.55-1.8c3.55-1.08 9.4-.87 13.12 1.34a.94.94 0 0 1-.96 1.62z"/></svg>' },
-  { name: "Instagram", url: "https://instagram.com", brand: "#E4405F",
-    svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="5.5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.6" cy="6.4" r="1.2" fill="currentColor" stroke="none"/></svg>' },
   { name: "Facebook", url: "https://facebook.com", brand: "#1877F2",
     svg: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.5-3.89 3.78-3.89 1.09 0 2.23.2 2.23.2v2.46H15.2c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12z"/></svg>' },
   { name: "Gmail", url: "https://mail.google.com", brand: "#EA4335",
@@ -55,8 +51,6 @@ function syncThemeControls() {
   document.querySelectorAll(".theme").forEach((el) => {
     el.setAttribute("aria-checked", String(dark));
     el.setAttribute("aria-label", dark ? "Tamno — prebaci na svijetlo" : "Svijetlo — prebaci na tamno");
-    const lbl = el.querySelector(".lbl");
-    if (lbl) lbl.textContent = dark ? "Tamno" : "Svijetlo";
   });
 }
 function initTheme() {
@@ -72,7 +66,7 @@ function toggleTheme() {
 }
 const themeButton = () =>
   `<button class="theme" role="switch" aria-checked="false" aria-label="Tamni način" data-theme-toggle>
-     <span class="tr"><i></i></span><span class="lbl">Svijetlo</span></button>`;
+     <span class="tr"><i></i></span></button>`;
 
 // ---- Device awareness -------------------------------------------------------
 function applyDevice() {
@@ -90,65 +84,85 @@ function applyDevice() {
 
 // ---- Login gate -------------------------------------------------------------
 function renderGate() {
-  const users = db.demoUsers();
+  const first = !renderGate._shown; // startup gets the full entrance sequence
+  renderGate._shown = true;
   root.innerHTML = `
-    <div class="gate">
+    <div class="gate ${first ? "enter" : ""}">
       <div class="gate-bg"></div>
-      ${themeButton()}
+      <div class="shimmer" aria-hidden="true"></div>
       <div class="login" role="dialog" aria-label="Prijava">
-        <div class="mark logo-fx logo-mark-fx logo-idle"><img src="brand/logo-mark.png" alt=""></div>
-        <div class="word">${WORD_IMG}</div>
-        <p class="sub">Operativa · nadzor i upravljanje</p>
-        <form id="login-form">
-          <label for="lg-user">Korisničko ime</label>
-          <input id="lg-user" autocomplete="username" placeholder="ime@smart-solutions.hr">
-          <label for="lg-pass">Lozinka</label>
-          <input id="lg-pass" type="password" autocomplete="current-password" placeholder="••••••••">
-          <div class="aux">
-            <span></span><button type="button" data-forgot>Zaboravljena lozinka?</button>
-          </div>
-          <button class="btn btn-red" type="submit">Prijava</button>
-        </form>
-        <div class="or">ili</div>
-        <button class="btn btn-ghost" data-google>
-          <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.3c0-.9-.1-1.5-.3-2.2H12v4.1h6.5c-.1 1.1-.8 2.7-2.4 3.8l3.7 2.9c2.2-2.1 3.7-5.1 3.7-8.6z"/><path fill="#34A853" d="M12 24c3.2 0 5.9-1.1 7.9-2.9l-3.7-2.9c-1 .7-2.4 1.2-4.2 1.2-3.2 0-5.9-2.1-6.8-5.1L1.3 17.2C3.3 21.2 7.3 24 12 24z"/><path fill="#FBBC05" d="M5.2 14.3a7.5 7.5 0 0 1 0-4.6L1.3 6.8a12 12 0 0 0 0 10.4l3.9-2.9z"/><path fill="#EA4335" d="M12 4.7c1.8 0 3 .8 3.7 1.4l2.7-2.7C16.9 1.3 14.2 0 12 0 7.3 0 3.3 2.8 1.3 6.8l3.9 2.9c.9-3 3.6-5 6.8-5z"/></svg>
-          Prijava Google računom
-        </button>
-        <div class="meta" style="margin:18px 2px 6px;text-align:center">Demo računi</div>
-        <div class="demo-users">
-          ${users.map((u) => `
-            <button class="demo-user" data-user="${esc(u.id)}">
-              <span class="av">${esc(u.name[0])}</span>
-              <span><b>${esc(u.name)}</b><span>${esc(u.title)}</span></span>
-            </button>`).join("")}
+        <div class="login-top">
+          <span class="logo-fx logo-full-fx ${first ? "shine-once" : ""} login-logo">
+            <img src="brand/logo-full.png" alt="smart solutions"></span>
+          ${themeButton()}
         </div>
-        <div class="create">Nemate račun? <button data-create>Registracija</button></div>
+        <h1 class="hello">Dobrodošli natrag</h1>
+        <p class="hello-sub">Operativa · Dubrovnik</p>
+        <button class="btn btn-google" data-google>
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.3c0-.9-.1-1.5-.3-2.2H12v4.1h6.5c-.1 1.1-.8 2.7-2.4 3.8l3.7 2.9c2.2-2.1 3.7-5.1 3.7-8.6z"/><path fill="#34A853" d="M12 24c3.2 0 5.9-1.1 7.9-2.9l-3.7-2.9c-1 .7-2.4 1.2-4.2 1.2-3.2 0-5.9-2.1-6.8-5.1L1.3 17.2C3.3 21.2 7.3 24 12 24z"/><path fill="#FBBC05" d="M5.2 14.3a7.5 7.5 0 0 1 0-4.6L1.3 6.8a12 12 0 0 0 0 10.4l3.9-2.9z"/><path fill="#EA4335" d="M12 4.7c1.8 0 3 .8 3.7 1.4l2.7-2.7C16.9 1.3 14.2 0 12 0 7.3 0 3.3 2.8 1.3 6.8l3.9 2.9c.9-3 3.6-5 6.8-5z"/></svg>
+          Nastavi s Google
+        </button>
+        <div class="or">ili email</div>
+        <form id="login-form">
+          <div class="field">
+            <svg class="f-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="m3 6.5 9 6.5 9-6.5"/></svg>
+            <input id="lg-user" autocomplete="username" placeholder="ime@smart-solutions.hr"
+                   aria-label="Email">
+          </div>
+          <div class="field">
+            <svg class="f-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10.5" width="16" height="10" rx="2.5"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
+            <input id="lg-pass" type="password" autocomplete="current-password" placeholder="Lozinka"
+                   aria-label="Lozinka">
+            <button type="button" class="f-eye" data-eye aria-label="Prikaži lozinku" aria-pressed="false">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.7"/></svg>
+            </button>
+          </div>
+          <div class="aux"><span></span>
+            <button type="button" data-forgot>Zaboravljena lozinka?</button></div>
+          <button class="btn btn-red btn-cta" type="submit">Prijavi se
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </form>
+        <div class="create">Prvi put? <button data-create>Napravi račun</button></div>
       </div>
     </div>`;
+
+  // eye toggle: show/hide the password
+  const pass = root.querySelector("#lg-pass");
+  const eye = root.querySelector("[data-eye]");
+  eye.onclick = () => {
+    const show = pass.type === "password";
+    pass.type = show ? "text" : "password";
+    eye.setAttribute("aria-pressed", String(show));
+    eye.setAttribute("aria-label", show ? "Sakrij lozinku" : "Prikaži lozinku");
+  };
 
   syncThemeControls();
   const soon = () => toast("Dostupno s produkcijskim backendom (Supabase).");
   root.querySelector("[data-google]").onclick = soon;
   root.querySelector("[data-forgot]").onclick = soon;
   root.querySelector("[data-create]").onclick = soon;
-  root.querySelector("#login-form").onsubmit = (e) => { e.preventDefault(); soon(); };
-  root.querySelectorAll("[data-user]").forEach((btn) => {
-    btn.onclick = () => {
-      if (root.querySelector(".gate.out")) return; // hand-off already running
-      const user = db.demoUsers().find((u) => u.id === btn.dataset.user);
-      signIn(user);
-      // Continuous transition, not a hard cut: the gate glides out, the
-      // dashboard deals in. Reduced motion goes straight to the shell.
-      const gate = root.querySelector(".gate");
-      const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-      if (reduce || !gate) { renderShell(true); return; }
-      gate.classList.add("out");
-      let done = false;
-      const finish = () => { if (!done) { done = true; renderShell(true); } };
-      gate.addEventListener("animationend", (e) => { if (e.target === gate) finish(); });
-      setTimeout(finish, 380); // safety: never strand the user on the gate
-    };
-  });
+  // Demo mode: Prijava signs straight in. The typed name can pick a role
+  // (marko -> field tech, ana -> warehouse); anything else is the owner.
+  root.querySelector("#login-form").onsubmit = (e) => {
+    e.preventDefault();
+    if (root.querySelector(".gate.out")) return; // hand-off already running
+    const typed = (root.querySelector("#lg-user").value || "").toLowerCase();
+    const users = db.demoUsers();
+    const user = users.find((u) => typed.includes(u.name.toLowerCase())) ||
+                 users.find((u) => u.role === "vlasnik");
+    signIn(user);
+    // Continuous transition, not a hard cut: the gate glides out, the
+    // dashboard deals in. Reduced motion goes straight to the shell.
+    const gate = root.querySelector(".gate");
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce || !gate) { renderShell(true); return; }
+    gate.classList.add("out");
+    let done = false;
+    const finish = () => { if (!done) { done = true; renderShell(true); } };
+    gate.addEventListener("animationend", (e2) => { if (e2.target === gate) finish(); });
+    setTimeout(finish, 380); // safety: never strand the user on the gate
+  };
 }
 
 // ---- App shell --------------------------------------------------------------
@@ -373,20 +387,7 @@ function boot() {
   on("auth", () => { /* future: realtime (re)subscribe here */ });
 
   loadSession();
-  const splash = document.getElementById("splash");
-  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const showApp = () => (getState().session ? renderShell() : renderGate());
-  if (reduce) {
-    splash.remove();
-    showApp();
-  } else {
-    setTimeout(() => {
-      splash.classList.add("out");
-      splash.addEventListener("animationend", (e) => { if (e.target === splash) splash.remove(); });
-      setTimeout(() => splash.remove(), 500); // belt and braces
-      showApp();
-    }, 850);
-  }
+  if (getState().session) renderShell(); else renderGate();
 }
 
 boot();
