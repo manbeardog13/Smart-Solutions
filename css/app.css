@@ -83,62 +83,175 @@ a{color:var(--red);text-underline-offset:3px}
 
 .meta{font-size:9px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:var(--ink3)}
 
-/* ══ login gate — one quiet tone, a slim matte card ══
-   Startup (.enter): the app fades in, the logo symbol blur-fades in first,
-   then the card blur-fades in after it. No bouncing, no scaling, no light
-   sweeps across the screen — and after startup the logo never animates. */
-.gate{min-height:100dvh;display:grid;place-items:center;position:relative;z-index:1;
-      padding:calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom))}
-.gate.enter{animation:app-fade .5s ease both}
+/* ══ login gate — ASC v2 split shell, in Smart Solutions red ══
+   A white (dark: anthracite, matte) shell: the left half is a near-black
+   stage — the logo carries a red depth glow, headline and lead stay short,
+   chips replay real counts, a notch tab bevels out of the corner. The right
+   half is the capsule form. Backdrop is a stylised composition (bloom, sash,
+   arc, grain — no photos), resolving from blur on startup. */
+.gate{min-height:100dvh;display:flex;position:relative;z-index:1;overflow-y:auto;
+      -webkit-overflow-scrolling:touch;
+      padding:calc(14px + env(safe-area-inset-top)) 0 calc(24px + env(safe-area-inset-bottom))}
+.gate.enter{animation:app-fade .64s ease both}
 @keyframes app-fade{from{opacity:0}}
-.gate.enter .login-logo img{animation:blur-in .8s ease .15s both}
-@keyframes blur-in{from{opacity:0;filter:blur(16px)}to{opacity:1;filter:blur(0)}}
-.gate.enter .login{animation:card-reveal .7s ease .4s both}
-@keyframes card-reveal{from{opacity:0;filter:blur(8px)}to{opacity:1;filter:blur(0)}}
-.gate:not(.enter) .login{animation:card-in .3s var(--snap) both}
-/* the login logo is still: no hover lift, no idle glow, no click animation —
-   only the single startup sheen across the symbol */
-.login .logo-fx{transition:none}
-.login .logo-fx:hover{transform:none;filter:none}
-.login .logo-fx:hover::after{animation:none}
-.login .shine-once::after{animation:sheen .9s var(--snap) 1.7s}
-/* the logon backdrop is a single quiet tone, like ASC — the panel's
-   underglow is what gives the screen its depth */
-.gate-bg{position:fixed;inset:0;z-index:0;background:var(--paper)}
-/* slim, matte, fully opaque — white in light, anthracite in dark.
-   No blur behind it, no highlight ring, no reflections. */
-.login{width:min(372px,92vw);background:#fff;
-       border:1px solid var(--line);border-radius:24px;padding:22px 22px 18px;position:relative;
-       z-index:1;overflow:hidden;
-       box-shadow:0 18px 44px -14px rgba(15,18,20,.22);
-       animation:card-in .4s var(--snap) both}
-:root[data-theme="dark"] .login{background:#26272B;
-  box-shadow:0 18px 44px -14px rgba(0,0,0,.6)}
-.login-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-.login-logo{width:122px;flex:0 0 122px}
-.login-logo img{width:100%;display:block}
-.hello{font-family:var(--sans);font-weight:800;font-size:22px;letter-spacing:-.02em;
-       margin:0 0 2px;color:var(--ink)}
-.hello-sub{margin:0 0 16px;font-size:13px;color:var(--ink3)}
-.btn-google{background:var(--sunk);border:1px solid var(--line);color:var(--ink);
-            font-weight:700;border-radius:14px}
-:root[data-theme="dark"] .btn-google{background:rgba(255,255,255,.07)}
-.btn-google:hover{border-color:var(--line2)}
-.field{position:relative;margin-bottom:10px}
-.f-ic{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:18px;height:18px;
-      color:var(--ink3);pointer-events:none}
-.field input{padding-left:42px !important}
-.f-eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:40px;height:40px;
-       display:grid;place-items:center;color:var(--ink3);border-radius:10px}
-.f-eye:hover{color:var(--ink)}
-.f-eye svg{width:20px;height:20px}
-.field:has(.f-eye) input{padding-right:48px !important}
-.btn-cta{border-radius:14px;padding:13px;font-size:15px;gap:10px}
+
+/* startup splash: the double-S mark alone with a small load bar, then a
+   fade hand-off to the gate */
+.splash{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:var(--paper)}
+.splash .sp-mark{width:76px;height:auto;
+  filter:drop-shadow(0 10px 26px rgba(221,4,38,.28));animation:splash-fade .6s ease both}
+.splash .sp-bar{position:absolute;left:50%;top:calc(50% + 66px);width:132px;height:3px;
+  margin-left:-66px;border-radius:999px;background:var(--sunk);overflow:hidden}
+.splash .sp-bar i{position:absolute;inset:0;border-radius:999px;background:var(--red);
+  transform-origin:left;transform:scaleX(0);animation:sp-load 1.05s cubic-bezier(.2,0,0,1) .1s both}
+@keyframes sp-load{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.splash.out{animation:sp-out .42s ease both;pointer-events:none}
+@keyframes sp-out{to{opacity:0}}
+
+/* stylised backdrop */
+.auth-bg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:var(--paper)}
+/* blend the top edge into the iOS status-bar strip (painted theme-color =
+   paper): the backdrop fades to exactly that tone, so the notch area reads
+   as one continuous surface in both themes — no seam (ASC rule) */
+.auth-bg::after{content:"";position:absolute;top:0;left:0;right:0;height:170px;
+  background:linear-gradient(to bottom,var(--paper) 0,var(--paper) 12px,transparent 100%)}
+.gate.enter .auth-bg{animation:auth-bg-in 1.5s cubic-bezier(.16,1,.3,1) both}
+@keyframes auth-bg-in{from{opacity:0;filter:blur(28px)}to{opacity:1;filter:blur(0)}}
+.auth-bg i{position:absolute;display:block}
+.ab-bloom{inset:-25% 40% 40% -25%;
+  background:radial-gradient(56% 56% at 34% 34%,rgba(221,4,38,.13),rgba(221,4,38,.04) 55%,transparent 72%)}
+.ab-sash{left:-18%;right:-18%;top:16%;height:24vh;border-radius:999px;
+  background:linear-gradient(90deg,transparent 4%,rgba(221,4,38,.09) 28%,rgba(190,3,34,.16) 52%,rgba(221,4,38,.07) 78%,transparent 96%);
+  filter:blur(18px);transform:rotate(-16deg)}
+.gate.enter .ab-sash{animation:sash-in 1.7s cubic-bezier(.16,1,.3,1) .12s both}
+@keyframes sash-in{from{transform:rotate(-16deg) translateX(-7%);opacity:0}
+  to{transform:rotate(-16deg) translateX(0);opacity:1}}
+.ab-arc{right:-34vmax;bottom:-46vmax;width:88vmax;height:88vmax;border-radius:50%;
+  border:1.5px solid rgba(15,18,20,.12);box-shadow:inset 0 0 0 1px rgba(15,18,20,.04);
+  background:radial-gradient(closest-side,transparent 82%,rgba(15,18,20,.04) 96%,transparent 100%)}
+:root[data-theme="dark"] .ab-arc{border-color:rgba(237,240,245,.08);box-shadow:inset 0 0 0 1px rgba(237,240,245,.03)}
+:root[data-theme="dark"] .ab-bloom,:root[data-theme="dark"] .ab-sash{opacity:.55}
+.ab-grain{inset:0;opacity:.05;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>")}
+/* pre-blurred red pool on its own compositor layer; moved via transform only */
+.ab-cursor{position:fixed;left:0;top:0;width:520px;height:520px;border-radius:50%;
+  background:radial-gradient(closest-side,rgba(221,4,38,.07),rgba(221,4,38,.03) 45%,transparent 70%);
+  transform:translate3d(-999px,-999px,0);will-change:transform}
+:root[data-theme="dark"] .ab-cursor{
+  background:radial-gradient(closest-side,rgba(221,4,38,.12),rgba(221,4,38,.04) 45%,transparent 70%)}
+@media (hover:none),(prefers-reduced-motion:reduce){.ab-cursor{display:none}}
+
+/* the shell */
+.auth-shell{--shell:#fff;position:relative;z-index:1;margin:auto;width:min(880px,100% - 32px);
+  background:var(--shell);border-radius:36px;overflow:hidden;display:grid;
+  box-shadow:0 12px 32px rgba(12,15,28,.14),0 32px 64px rgba(12,15,28,.18)}
+@media (min-width:760px){.auth-shell{grid-template-columns:1fr 1fr}}
+:root[data-theme="dark"] .auth-shell{--shell:#17181C;box-shadow:0 30px 80px -30px rgba(0,0,0,.8)}
+.gate.enter .auth-shell{animation:login-emerge .62s cubic-bezier(.16,.86,.3,1) .12s both}
+@keyframes login-emerge{from{opacity:0;filter:blur(16px);transform:translateY(8px) scale(.985)}
+  to{opacity:1;filter:blur(0);transform:none}}
+.gate:not(.enter) .auth-shell{animation:card-in .3s var(--snap) both}
 @keyframes card-in{from{opacity:0;transform:translateY(16px) scale(.98)}to{opacity:1;transform:none}}
-.login input{width:100%;background:var(--sunk);border:1px solid var(--line);border-radius:14px;
-             padding:11px 14px;color:var(--ink);font-size:16px;font-family:inherit;outline:none;
-             transition:border-color .12s linear,background .12s linear}
-.login input:focus{border-color:var(--red);background:transparent}
+
+/* the stage — darker than the dark shell, so the split survives both themes */
+.auth-stage{position:relative;display:flex;flex-direction:column;
+  background:linear-gradient(175deg,#0B0C0E 0%,#17181B 100%);color:#EDF0F5;
+  padding:18px 40px 56px}
+.auth-stage .auth-logo{height:50px;width:auto;align-self:flex-start;margin:22px 0 26px;
+  filter:drop-shadow(0 8px 22px rgba(221,4,38,.35))}
+.gate.enter .auth-logo{animation:splash-fade .7s ease both}
+@keyframes splash-fade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.stage-title{font-family:var(--sans);font-size:28px;font-weight:650;letter-spacing:-.02em;
+  line-height:1.2;margin:0}
+.stage-title span{color:rgba(237,240,245,.6)}
+.stage-lead{margin:12px 0 0;font-size:14px;line-height:1.6;color:rgba(237,240,245,.6);max-width:34ch}
+/* corner tab notch — the label sits in a cutout bevelled at the bottom-left */
+.stage-notch{position:absolute;left:0;bottom:0;background:var(--shell);color:var(--ink3);
+  font-size:11.5px;font-weight:500;letter-spacing:.02em;padding:9px 16px 11px 20px;
+  border-radius:0 18px 0 0;transition:background var(--t) linear}
+.stage-notch::before,.stage-notch::after{content:"";position:absolute;width:18px;height:18px;
+  background:radial-gradient(circle at 100% 0%,transparent 18px,var(--shell) 18.5px)}
+.stage-notch::before{left:0;top:-18px}
+.stage-notch::after{right:-18px;bottom:0}
+/* stage chips — one line, pinned above the notch */
+.stage-chips{display:flex;flex-wrap:nowrap;gap:6px;margin-top:auto;padding-top:26px}
+.schip{white-space:nowrap;font-size:11.5px;font-weight:550;letter-spacing:.01em;
+  padding:7px 13px;border-radius:999px;background:rgba(237,240,245,.08);color:rgba(237,240,245,.6)}
+.schip-live{display:inline-flex;align-items:center;gap:7px;background:rgba(221,4,38,.18);color:#FF8296}
+.schip-live i{width:6px;height:6px;border-radius:50%;background:var(--red);
+  box-shadow:0 0 8px 2px rgba(221,4,38,.3);animation:seg-breathe 2.4s ease-in-out infinite}
+@keyframes seg-breathe{50%{transform:scale(1.3);opacity:.8}}
+
+/* the form side */
+.auth-side{position:relative;padding:72px 40px 36px;display:flex;flex-direction:column;
+  justify-content:center}
+.auth-title{font-family:var(--sans);font-size:22px;font-weight:650;letter-spacing:-.01em;
+  margin:0;color:var(--ink)}
+.auth-sub{margin:5px 0 0;font-size:13.5px;color:var(--ink3)}
+.auth-sub+.auth-form{margin-top:22px}
+.auth-form{display:flex;flex-direction:column}
+/* seg pill top-right: just the theme dot (dot = light, ring = dark) */
+.auth-seg{position:absolute;top:18px;right:18px;z-index:2;display:flex;gap:2px;padding:4px;
+  background:var(--paper);border-radius:999px;transition:background var(--t) linear}
+.auth-seg .seg-mode{display:flex;align-items:center;padding:8px 13px;border-radius:999px}
+.auth-seg .seg-mode i{display:block;width:12px;height:12px;border-radius:50%;background:var(--ink);
+  transition:background .38s var(--snap),box-shadow .38s var(--snap)}
+:root[data-theme="dark"] .auth-seg .seg-mode i{background:transparent;
+  box-shadow:inset 0 0 0 2.5px var(--ink)}
+/* capsule fields */
+.fieldx{position:relative;display:flex;align-items:center;margin-bottom:11px;
+  background:var(--sunk);border:1px solid var(--line);border-radius:999px;
+  transition:border-color .18s ease,box-shadow .18s ease}
+.fieldx:focus-within{border-color:var(--red);box-shadow:0 0 0 4px rgba(221,4,38,.14)}
+.fieldx input{flex:1;width:100%;min-height:52px;border:none;background:transparent;outline:none;
+  -webkit-appearance:none;appearance:none;border-radius:999px;color:var(--ink);
+  font-family:inherit;font-size:16px;letter-spacing:.2px;padding:0 16px 0 22px}
+.fieldx input::placeholder{color:var(--ink4)}
+.fieldx:has(.fx-eye) input{padding-right:54px}
+.fx-eye{position:absolute;right:12px;width:40px;height:40px;display:grid;place-items:center;
+  border:none;background:transparent;color:var(--ink3);border-radius:50%}
+.fx-eye:hover{color:var(--ink)}
+.fx-eye svg{width:21px;height:21px}
+/* capsule buttons */
+.btn-brand{width:100%;min-height:52px;border:none;border-radius:999px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  font-family:inherit;font-size:15px;font-weight:650;color:#fff;
+  background:linear-gradient(140deg,#F4415A,var(--red) 55%,#BE0322);
+  box-shadow:0 12px 28px -12px rgba(221,4,38,.30);
+  transition:transform .18s var(--snap),box-shadow .16s ease,filter .16s ease}
+.btn-brand:hover{filter:brightness(1.05);transform:translateY(-1px);
+  box-shadow:0 16px 34px -12px rgba(221,4,38,.30)}
+.btn-brand:active{transform:scale(.99)}
+.btn-brand svg{transition:transform .38s cubic-bezier(.16,1,.3,1)}
+.btn-brand:hover svg{transform:translateX(3px)}
+.btn-google{width:100%;min-height:52px;border-radius:999px;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  background:var(--paper);color:var(--ink);font-family:inherit;font-size:14.5px;font-weight:600;
+  transition:background .16s linear}
+.btn-google:hover{background:var(--sunk)}
+.btn-google svg{flex:none}
+/* quiet divider, lone forgot link, create line */
+.auth-divider{display:flex;align-items:center;gap:14px;margin:20px 2px 16px;
+  color:var(--ink3);font-size:11.5px;font-weight:500;letter-spacing:.02em}
+.auth-divider::before,.auth-divider::after{content:"";flex:1;height:1px;
+  background:linear-gradient(90deg,transparent,var(--line2),transparent)}
+.auth-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.auth-row--end{justify-content:flex-end;margin:2px 6px 14px}
+.auth-forgot{border:none;background:transparent;cursor:pointer;padding:4px 2px;
+  font-family:inherit;font-size:13.5px;color:var(--ink3);transition:color .16s linear}
+.auth-forgot:hover{color:var(--ink2)}
+.auth-create{margin:20px 0 0;text-align:center;font-size:14px;color:var(--ink3)}
+.auth-create-link{border:none;background:transparent;cursor:pointer;font-family:inherit;
+  font-size:14px;font-weight:600;color:var(--red);padding:2px}
+.auth-create-link:hover{text-decoration:underline}
+/* mobile stacks: compact stage on top, form below */
+@media (max-width:759.5px){
+  .gate{padding:calc(8px + env(safe-area-inset-top)) 0 calc(24px + env(safe-area-inset-bottom))}
+  .auth-stage{padding:16px 24px 48px}
+  .auth-stage .auth-logo{height:42px;margin:8px 0 20px}
+  .stage-title{font-size:24px}
+  .auth-side{padding:26px 22px 34px}
+}
 .btn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;padding:13px;
      border-radius:var(--r-ctl);font-weight:800;font-size:14px;
      transition:border-radius var(--t) var(--snap),background var(--t) linear,color var(--t) linear,
@@ -152,24 +265,6 @@ a{color:var(--red);text-underline-offset:3px}
          box-shadow:0 5px 14px rgba(221,4,38,.28),inset 0 1px 0 rgba(255,255,255,.25)}
 .btn-ghost{background:var(--sunk);color:var(--ink2)}
 .btn-ghost:hover{color:var(--ink)}
-.login .aux{display:flex;justify-content:space-between;align-items:center;margin:2px 2px 12px;
-            font-size:13px}
-.login .aux button{color:var(--ink2);font-weight:700;font-size:13px}
-.login .or{display:flex;align-items:center;gap:10px;color:var(--ink4);font-size:10px;
-           letter-spacing:.14em;text-transform:uppercase;margin:12px 0}
-.login .or::before,.login .or::after{content:"";flex:1;height:1px;background:var(--line)}
-.login .create{text-align:center;margin-top:14px;font-size:12.5px;color:var(--ink3)}
-.login .create button{color:var(--red);font-weight:800}
-.demo-users{display:grid;gap:7px;margin-top:6px}
-.demo-user{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:11px;
-           background:var(--sunk);text-align:left;
-           transition:border-radius var(--t) var(--snap),background var(--t) linear}
-.demo-user:hover{background:var(--red-soft)}
-.demo-user .av{width:32px;height:32px;flex:0 0 32px;border-radius:50%;background:var(--night);
-               color:#fff;display:grid;place-items:center;font-family:var(--display);font-size:12px}
-:root[data-theme="dark"] .demo-user .av{background:var(--red)}
-.demo-user b{display:block;font-size:13.5px}
-.demo-user span{font-size:10px;color:var(--ink3);letter-spacing:.08em;text-transform:uppercase}
 
 /* theme slider */
 .theme{display:inline-flex;align-items:center;padding:6px;border-radius:999px}
@@ -398,16 +493,6 @@ main{min-height:100dvh;padding-left:var(--rail);transition:padding-left .2s var(
   .shelf{display:none}
   .stage{padding:16px 14px 80px}
   .top{padding:calc(10px + env(safe-area-inset-top)) 14px 10px}
-  /* the gate fits like ASC: compact card, nothing oversized */
-  .login{width:min(348px,92vw);padding:20px 18px 16px;border-radius:20px}
-  .login-logo{width:112px;flex:0 0 112px}
-  .hello{font-size:20px}
-  .login label{margin-top:11px}
-  .login input{padding:10px 13px}
-  .login .btn{padding:12px;font-size:14.5px}
-  .btn-cta{padding:12px;font-size:14.5px}
-  .login .or{margin:10px 0}
-  .login .create{margin-top:12px;font-size:12px}
   .card-theme{top:12px;right:12px}
   .nl.pin{display:none}
   /* the rail foot is gone on phones — essential controls surface up top */
@@ -421,5 +506,5 @@ main{min-height:100dvh;padding-left:var(--rail);transition:padding-left .2s var(
 /* gate exit: the continuous login → dashboard transition */
 .gate.out{animation:gate-out .34s var(--snap) both}
 @keyframes gate-out{to{opacity:0;transform:scale(1.02)}}
-.gate.out .login{animation:login-out .3s var(--snap) both}
+.gate.out .auth-shell{animation:login-out .3s var(--snap) both}
 @keyframes login-out{to{opacity:0;transform:translateY(-14px) scale(.985)}}

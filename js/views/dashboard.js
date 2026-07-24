@@ -21,6 +21,14 @@ export function render(main, ctx) {
     { meta: "Nedavna kretanja", v: String(movements.length), alarm: false },
   ];
 
+  // The login stage chips replay these real counts on the next visit —
+  // never fake numbers on the gate (ASC rule).
+  try {
+    localStorage.setItem("ss.loginChips", JSON.stringify({
+      ready: items.length - low.length, low: low.length,
+    }));
+  } catch { /* storage full — chips just fall back to feature labels */ }
+
   // Deal from the center out: order pairs [1,2] then [0,3] etc. On a 4-card
   // row the two middle cards land first, edges follow — all inside 620 ms.
   const delays = dealDelays(cards.length);
