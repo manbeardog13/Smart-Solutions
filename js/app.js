@@ -89,7 +89,6 @@ function renderGate() {
   root.innerHTML = `
     <div class="gate ${first ? "enter" : ""}">
       <div class="gate-bg"></div>
-      <div class="shimmer" aria-hidden="true"></div>
       <div class="login" role="dialog" aria-label="Prijava">
         <div class="login-top">
           <span class="logo-fx logo-full-fx ${first ? "shine-once" : ""} login-logo">
