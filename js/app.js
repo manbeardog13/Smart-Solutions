@@ -83,48 +83,100 @@ function applyDevice() {
 }
 
 // ---- Login gate -------------------------------------------------------------
+// ASC v2 split shell, in Smart Solutions red: dark stage (logo with a red
+// depth glow, headline, real cached counts, corner notch) beside a capsule
+// form. The backdrop is a stylised composition — bloom, sash, arc, grain —
+// never a photo.
+
+// Stage chips: real counts from the last dashboard visit (written by
+// views/dashboard.js) — never fake numbers. Feature labels before first login.
+function gateChips() {
+  let s = null;
+  try { s = JSON.parse(localStorage.getItem("ss.loginChips") || "null"); } catch { /* ignore */ }
+  const c1 = s && Number.isFinite(s.ready) ? `${s.ready} spremnih pozicija` : "Zalihe uživo";
+  const c2 = s && Number.isFinite(s.low) ? `${s.low} ispod minimuma` : "QR skeniranje";
+  return `<span class="schip schip-live"><i></i>${esc(c1)}</span>
+    <span class="schip">${esc(c2)}</span>
+    <span class="schip">Demo</span>`;
+}
+
 function renderGate() {
-  const first = !renderGate._shown; // startup gets the full entrance sequence
+  const first = !renderGate._shown; // startup gets splash + the full entrance
   renderGate._shown = true;
-  root.innerHTML = `
-    <div class="gate ${first ? "enter" : ""}">
-      <div class="gate-bg"></div>
-      <div class="login" role="dialog" aria-label="Prijava">
-        <div class="login-top">
-          <span class="logo-fx logo-full-fx ${first ? "shine-once" : ""} login-logo">
-            <img src="brand/logo-full.png" alt="smart solutions"></span>
-          ${themeButton()}
-        </div>
-        <h1 class="hello">Dobrodošli natrag</h1>
-        <p class="hello-sub">Operativa · Dubrovnik</p>
-        <button class="btn btn-google" data-google>
-          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.3c0-.9-.1-1.5-.3-2.2H12v4.1h6.5c-.1 1.1-.8 2.7-2.4 3.8l3.7 2.9c2.2-2.1 3.7-5.1 3.7-8.6z"/><path fill="#34A853" d="M12 24c3.2 0 5.9-1.1 7.9-2.9l-3.7-2.9c-1 .7-2.4 1.2-4.2 1.2-3.2 0-5.9-2.1-6.8-5.1L1.3 17.2C3.3 21.2 7.3 24 12 24z"/><path fill="#FBBC05" d="M5.2 14.3a7.5 7.5 0 0 1 0-4.6L1.3 6.8a12 12 0 0 0 0 10.4l3.9-2.9z"/><path fill="#EA4335" d="M12 4.7c1.8 0 3 .8 3.7 1.4l2.7-2.7C16.9 1.3 14.2 0 12 0 7.3 0 3.3 2.8 1.3 6.8l3.9 2.9c.9-3 3.6-5 6.8-5z"/></svg>
-          Nastavi s Google
-        </button>
-        <div class="or">ili email</div>
-        <form id="login-form">
-          <div class="field">
-            <svg class="f-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="m3 6.5 9 6.5 9-6.5"/></svg>
-            <input id="lg-user" autocomplete="username" placeholder="ime@smart-solutions.hr"
-                   aria-label="Email">
+  // Startup: the red double-S mark alone, centered, with a small load bar —
+  // then the splash fades and the gate's entrance sequence takes over.
+  const splash = first ? `
+    <div class="splash" aria-hidden="true">
+      <img class="sp-mark" src="brand/logo-mark.png" alt="">
+      <span class="sp-bar"><i></i></span>
+    </div>` : "";
+  root.innerHTML = `${splash}
+    <div class="gate">
+      <div class="auth-bg" aria-hidden="true">
+        <i class="ab-bloom"></i>
+        <i class="ab-sash"></i>
+        <i class="ab-arc"></i>
+        <i class="ab-cursor"></i>
+        <i class="ab-grain"></i>
+      </div>
+      <div class="auth-shell" role="dialog" aria-label="Prijava">
+        <section class="auth-stage">
+          <img class="auth-logo" src="brand/logo-full.png" alt="smart solutions">
+          <h2 class="stage-title">Sve na svom mjestu.<br><span>Od skladišta do terena.</span></h2>
+          <p class="stage-lead">Zalihe, radni nalozi i QR skeniranje — jedna operativa za cijeli tim.</p>
+          <div class="stage-chips">${gateChips()}</div>
+          <span class="stage-notch">Operativa · Dubrovnik</span>
+        </section>
+        <section class="auth-side">
+          <div class="auth-seg" role="group" aria-label="Tema">
+            <button type="button" class="theme seg-mode" role="switch" aria-checked="false"
+                    aria-label="Tamni način" data-theme-toggle><i></i></button>
           </div>
-          <div class="field">
-            <svg class="f-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10.5" width="16" height="10" rx="2.5"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
-            <input id="lg-pass" type="password" autocomplete="current-password" placeholder="Lozinka"
-                   aria-label="Lozinka">
-            <button type="button" class="f-eye" data-eye aria-label="Prikaži lozinku" aria-pressed="false">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.7"/></svg>
+          <h1 class="auth-title">Dobrodošli natrag</h1>
+          <p class="auth-sub">Prijavite se za nastavak</p>
+          <form id="login-form" class="auth-form" novalidate>
+            <button type="button" class="btn-google" data-google>
+              <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.3c0-.9-.1-1.5-.3-2.2H12v4.1h6.5c-.1 1.1-.8 2.7-2.4 3.8l3.7 2.9c2.2-2.1 3.7-5.1 3.7-8.6z"/><path fill="#34A853" d="M12 24c3.2 0 5.9-1.1 7.9-2.9l-3.7-2.9c-1 .7-2.4 1.2-4.2 1.2-3.2 0-5.9-2.1-6.8-5.1L1.3 17.2C3.3 21.2 7.3 24 12 24z"/><path fill="#FBBC05" d="M5.2 14.3a7.5 7.5 0 0 1 0-4.6L1.3 6.8a12 12 0 0 0 0 10.4l3.9-2.9z"/><path fill="#EA4335" d="M12 4.7c1.8 0 3 .8 3.7 1.4l2.7-2.7C16.9 1.3 14.2 0 12 0 7.3 0 3.3 2.8 1.3 6.8l3.9 2.9c.9-3 3.6-5 6.8-5z"/></svg>
+              <span>Nastavi s Google</span>
             </button>
-          </div>
-          <div class="aux"><span></span>
-            <button type="button" data-forgot>Zaboravljena lozinka?</button></div>
-          <button class="btn btn-red btn-cta" type="submit">Prijavi se
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-          </button>
-        </form>
-        <div class="create">Prvi put? <button data-create>Napravi račun</button></div>
+            <div class="auth-divider"><span>ili nastavite e-mailom</span></div>
+            <label class="fieldx">
+              <input id="lg-user" autocomplete="username" placeholder="ime@smart-solutions.hr"
+                     aria-label="Email"></label>
+            <label class="fieldx">
+              <input id="lg-pass" type="password" autocomplete="current-password" placeholder="Lozinka"
+                     aria-label="Lozinka">
+              <button type="button" class="fx-eye" data-eye aria-label="Prikaži lozinku" aria-pressed="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.7"/></svg>
+              </button></label>
+            <div class="auth-row auth-row--end">
+              <button type="button" class="auth-forgot" data-forgot>Zaboravljena lozinka?</button>
+            </div>
+            <button class="btn-brand" type="submit">Prijavi se
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </button>
+            <p class="auth-create">Prvi put? <button type="button" class="auth-create-link" data-create>Napravi račun</button></p>
+          </form>
+        </section>
       </div>
     </div>`;
+
+  // Splash → gate hand-off. Reduced motion (or a repeat visit to the gate)
+  // goes straight to the panel.
+  const sp = root.querySelector(".splash");
+  const gateEl = root.querySelector(".gate");
+  if (sp) {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      sp.remove();
+    } else {
+      setTimeout(() => {
+        if (!sp.isConnected) return;
+        sp.classList.add("out");
+        gateEl.classList.add("enter");
+        setTimeout(() => sp.remove(), 460);
+      }, 1200);
+    }
+  }
 
   // eye toggle: show/hide the password
   const pass = root.querySelector("#lg-pass");
@@ -135,6 +187,22 @@ function renderGate() {
     eye.setAttribute("aria-pressed", String(show));
     eye.setAttribute("aria-label", show ? "Sakrij lozinku" : "Prikaži lozinku");
   };
+
+  // Cursor glow — moved with transform only (compositor frame, zero lag).
+  // Pointer devices only; reduced-motion and touch hide it via CSS.
+  const glow = root.querySelector(".ab-cursor");
+  if (renderGate._glowMove) removeEventListener("pointermove", renderGate._glowMove);
+  if (glow && matchMedia("(hover: hover)").matches) {
+    renderGate._glowMove = (e) => {
+      if (!glow.isConnected) {
+        removeEventListener("pointermove", renderGate._glowMove);
+        renderGate._glowMove = null;
+        return;
+      }
+      glow.style.transform = `translate3d(${e.clientX - 260}px, ${e.clientY - 260}px, 0)`;
+    };
+    addEventListener("pointermove", renderGate._glowMove, { passive: true });
+  }
 
   syncThemeControls();
   const soon = () => toast("Dostupno s produkcijskim backendom (Supabase).");
