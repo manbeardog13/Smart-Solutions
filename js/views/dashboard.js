@@ -15,10 +15,10 @@ export function render(main, ctx) {
   const movements = db.listMovements();
 
   const cards = [
-    { meta: "Spremne pozicije", v: String(items.length - low.length), alarm: false },
-    { meta: "Ispod minimuma", v: String(low.length), alarm: low.length > 0 },
-    { meta: "Otvoreni nalozi", v: String(orders.length), alarm: false },
-    { meta: "Nedavna kretanja", v: String(movements.length), alarm: false },
+    { meta: "Spremno", v: String(items.length - low.length), alarm: false, goto: "/warehouse" },
+    { meta: "Ispod minimuma", v: String(low.length), alarm: low.length > 0, goto: "/warehouse" },
+    { meta: "Nalozi", v: String(orders.length), alarm: false, goto: "/orders" },
+    { meta: "Kretanja", v: String(movements.length), alarm: false, goto: "/movements" },
   ];
 
   // Deal from the center out: order pairs [1,2] then [0,3] etc. On a 4-card
@@ -45,26 +45,26 @@ export function render(main, ctx) {
       <span class="scrim" aria-hidden="true"></span>
       <span class="k">Operativa · Smart Solutions · Dubrovnik</span>
       <h1 class="greet-line">${esc(hi)}, ${esc((ctx.session && ctx.session.name) || "")}.</h1>
-      <div class="hero-num">${esc(String(ready))}<em>${esc(hrCount(ready, ["pozicija spremna", "pozicije spremne", "pozicija spremno"]).replace(/^\d+\s*/, ""))}</em></div>
+      <button class="hero-num" data-goto="/warehouse" aria-label="Otvori skladište">${esc(String(ready))}<em>${esc(hrCount(ready, ["pozicija spremna", "pozicije spremne", "pozicija spremno"]).replace(/^\d+\s*/, ""))}</em></button>
       <div class="cap">${esc(String(items.length))} artikala na stanju · ${esc(status)}</div>
       <div class="meter"><i style="width:${pct}%"></i></div>
       <span class="tab-corner">danas · Dubrovnik</span>
     </section>
     <div class="cards deal">
       ${order.sort((a, b) => a.i - b.i).map((c) => `
-        <div class="card ${c.alarm ? "alarm" : ""} ${c.i <= mid ? "from-right" : "from-left"}"
-             style="--deal-delay:${c.delay}ms">
+        <button class="card ${c.alarm ? "alarm" : ""} ${c.i <= mid ? "from-right" : "from-left"}"
+             style="--deal-delay:${c.delay}ms" data-goto="${esc(c.goto)}">
           <div class="meta">${esc(c.meta)}</div><div class="v">${esc(c.v)}</div>
-        </div>`).join("")}
+        </button>`).join("")}
     </div>
-    <div class="panel">
-      <div class="ph">${icon("alert")}<h2>Traži pažnju</h2></div>
+    <div class="panel tabbed">
+      <h2 class="tab-tl">Traži pažnju</h2>
       ${low.length === 0 ? `<div class="row"><div class="b"><div class="n">Sve je pod kontrolom.</div></div></div>`
         : low.map((it) => canWarehouse ? `
         <button class="row" data-goto-item="${esc(it.id)}">
           ${thumb(it)}
           <span class="b"><span class="n">${esc(it.name)}</span>
-            <span class="a">${esc(it.loc)} · ${esc(it.supplier)}</span></span>
+            <span class="a">${esc(it.loc)}</span></span>
           <span class="badge-low">Nisko</span>
           <span class="rt"><span class="big">${esc(String(it.qty))}</span>
             <span class="ag">min ${esc(String(it.min))}</span></span>
@@ -72,26 +72,31 @@ export function render(main, ctx) {
         <div class="row">
           ${thumb(it)}
           <span class="b"><span class="n">${esc(it.name)}</span>
-            <span class="a">${esc(it.loc)} · ${esc(it.supplier)}</span></span>
+            <span class="a">${esc(it.loc)}</span></span>
           <span class="badge-low">Nisko</span>
           <span class="rt"><span class="big">${esc(String(it.qty))}</span>
             <span class="ag">min ${esc(String(it.min))}</span></span>
         </div>`).join("")}
     </div>
     ${canOrders ? `
-    <div class="panel">
-      <div class="ph">${icon("order")}<h2>Radni nalozi</h2></div>
+    <div class="panel tabbed">
+      <img class="p-img" src="catalogue/thumbs/catalogue-cover.webp" alt="">
+      <h2 class="tab-tl">Nalozi</h2>
       ${orders.map((o) => `
-        <div class="row">
+        <button class="row" data-goto="/orders">
           <span class="b"><span class="n">${esc(o.client)} — ${esc(o.task)}</span>
-            <span class="a">${esc(o.id)} · ${esc(o.loc)} · ${esc(o.tech)}</span></span>
+            <span class="a">${esc(o.loc)}</span></span>
           <span class="rt"><span class="big" style="font-size:12px">${esc(o.when)}</span></span>
-        </div>`).join("")}
+        </button>`).join("")}
     </div>` : ""}`;
 
   // Attention rows deep-link to the exact item, same as a scanned sticker —
   // only for roles that can actually open the warehouse.
   main.querySelectorAll("[data-goto-item]").forEach((b) => {
     b.onclick = () => { location.hash = "#/item/" + encodeURIComponent(b.dataset.gotoItem); };
+  });
+  // everything on the board is a real destination
+  main.querySelectorAll("[data-goto]").forEach((b) => {
+    b.onclick = () => { location.hash = "#" + b.dataset.goto; };
   });
 }

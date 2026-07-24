@@ -13,8 +13,8 @@ export function render(main) {
 
   const ROLE_TITLES = { majstor: "Majstor", skladistar: "Skladištar" };
   main.innerHTML = `
-    <div class="panel">
-      <div class="ph">${icon("admin")}<h2>Vidljivost po ulozi</h2>
+    <div class="panel tabbed">
+      <h2 class="tab-tl">Vidljivost po ulozi</h2><div class="ph" style="padding-top:0">
         <span class="meta" style="margin-left:auto">vlasnik uvijek vidi sve</span></div>
       ${editableRoles.map((role) => `
         <div class="row" style="align-items:flex-start">
