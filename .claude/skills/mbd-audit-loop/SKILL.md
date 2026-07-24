@@ -1,6 +1,6 @@
 ---
 name: mbd-audit-loop
-description: The multi-agent audit → adversarial verify → fix → re-audit loop that hardened Operativa (66 confirmed findings fixed across two rounds). Use after completing any substantial feature or milestone on an MBD platform, or when the owner asks for a comprehensive review, before anything is called done or release-ready.
+description: The multi-agent audit → adversarial verify → fix → re-audit loop that hardened Operativa (three rounds, ~100 distinct findings fixed). Use after completing any substantial feature or milestone on an MBD platform, or when the owner asks for a comprehensive review, before anything is called done or release-ready.
 ---
 
 # MBD Audit Loop
