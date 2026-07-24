@@ -522,6 +522,15 @@ a{color:var(--red);text-underline-offset:3px}
 .hero-num em{font-style:normal;font:500 13px var(--sans);letter-spacing:.06em;
   text-transform:uppercase;color:rgba(237,240,245,.6);margin-left:8px}
 .hero .cap{font-size:13.5px;color:rgba(237,240,245,.6)}
+/* rotating status line — one honest stat at a time, rolling vertically */
+.cap.roll{height:21px;overflow:hidden}
+.cap.roll span{display:block;height:21px;line-height:21px;
+  animation:cap-roll 10.5s cubic-bezier(.22,1,.36,1) infinite}
+@keyframes cap-roll{0%,26%{transform:translateY(0)}
+  33%,59%{transform:translateY(-21px)}
+  66%,92%{transform:translateY(-42px)}
+  100%{transform:translateY(-63px)}}
+@media(prefers-reduced-motion:reduce){.cap.roll span{animation:none}}
 .hero .k,.greet-line,.hero-num,.hero .cap{text-shadow:0 1px 4px rgba(2,3,5,.82)}
 .meter{margin-top:14px;height:8px;border-radius:4px;background:rgba(244,245,247,.14);
   overflow:hidden;max-width:460px}
@@ -534,7 +543,8 @@ a{color:var(--red);text-underline-offset:3px}
   letter-spacing:.07em;text-transform:uppercase;color:var(--ink2);
   background:var(--tab-surf);padding:7px 13px 8px;white-space:nowrap;
   transition:background .38s var(--smooth)}
-.panel.tabbed{padding-top:34px}
+.panel.tabbed{padding-top:40px}
+.panel.corner{padding-bottom:36px}
 .live-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#2FBF5B;
   margin-right:7px;vertical-align:1px;box-shadow:0 0 8px 2px rgba(47,191,91,.35);
   animation:live-breathe 2.4s ease-in-out infinite}
@@ -617,6 +627,38 @@ a{color:var(--red);text-underline-offset:3px}
 .field-mode .searchbar input{padding:16px 18px;font-size:17px}
 .field-mode .card .v{font-size:44px}
 .field-mode .sb-item{min-height:48px;font-size:15px}
+
+/* dedicated item cards — each asset on its own card, its photo blended
+   into the card background (solid text side left, photo breathing right) */
+.icards{display:flex;flex-direction:column;gap:10px;padding:2px 12px 6px}
+.icard{position:relative;border-radius:18px;overflow:hidden;background:var(--panel2);
+  box-shadow:var(--shadow-1);padding:16px 16px 14px;min-height:106px;
+  transition:transform .16s var(--snap),box-shadow .2s var(--snap),
+             background .38s var(--smooth)}
+@media(any-hover:hover){ .icard:hover{transform:translateY(-2px);box-shadow:var(--shadow-2)} }
+.ic-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  object-position:center right;z-index:0;pointer-events:none}
+.ic-scrim{position:absolute;inset:0;z-index:0;pointer-events:none;background:
+  linear-gradient(180deg,
+    color-mix(in srgb,var(--panel2) 90%,transparent) 0%,
+    color-mix(in srgb,var(--panel2) 52%,transparent) 48%,
+    color-mix(in srgb,var(--panel2) 26%,transparent) 100%),
+  linear-gradient(90deg,var(--panel2) 34%,
+    color-mix(in srgb,var(--panel2) 62%,transparent) 62%,
+    color-mix(in srgb,var(--panel2) 8%,transparent) 100%)}
+.icard>*:not(.ic-bg):not(.ic-scrim){position:relative;z-index:1}
+:root[data-theme="dark"] .ic-bg{filter:brightness(.72)}
+.ic-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px}
+.ic-name{flex:1;font:700 17px/1.3 var(--sans);color:var(--ink)}
+.ic-qty{flex:none;text-align:right;font:600 25px/1 var(--sora);letter-spacing:-.03em;
+  color:var(--ink);font-variant-numeric:tabular-nums}
+.ic-qty.low{color:var(--red-text)}
+.ic-qty em{font-style:normal;display:block;margin-top:3px;
+  font:500 10.5px var(--sans);letter-spacing:.01em;color:var(--ink3)}
+.ic-acts{display:flex;gap:6px;justify-content:flex-end;align-items:center;flex-wrap:wrap}
+/* controls stay legible over the photo: frosted, not transparent */
+.icard .btn-ghost,.icard .qin{background:color-mix(in srgb,var(--panel2) 78%,transparent);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 
 /* roomy rows — slight spacing between each, one clean line, larger text */
 .roomy .row{margin:4px 10px;border-radius:12px}

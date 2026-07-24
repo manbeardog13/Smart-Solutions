@@ -46,7 +46,12 @@ export function render(main, ctx) {
       <span class="k">Operativa · Smart Solutions · Dubrovnik</span>
       <h1 class="greet-line">${esc(hi)}, ${esc((ctx.session && ctx.session.name) || "")}.</h1>
       <button class="hero-num" data-goto="/warehouse" aria-label="Otvori skladište">${esc(String(ready))}<em>${esc(hrCount(ready, ["pozicija spremna", "pozicije spremne", "pozicija spremno"]).replace(/^\d+\s*/, ""))}</em></button>
-      <div class="cap">${esc(String(items.length))} artikala na stanju · ${esc(status)}</div>
+      <div class="cap roll" aria-label="${esc(String(items.length))} artikala na stanju">
+        <span>${esc(hrCount(items.length, ["artikl na stanju", "artikla na stanju", "artikala na stanju"]))}</span>
+        <span>${esc(low.length === 0 ? "sve pod kontrolom" : hrCount(low.length, ["artikl ispod minimuma", "artikla ispod minimuma", "artikala ispod minimuma"]))}</span>
+        <span>${esc(hrCount(orders.length, ["otvoren nalog", "otvorena naloga", "otvorenih naloga"]))}</span>
+        <span>${esc(hrCount(items.length, ["artikl na stanju", "artikla na stanju", "artikala na stanju"]))}</span>
+      </div>
       <div class="meter"><i style="width:${pct}%"></i></div>
       <span class="tab-corner"><i class="live-dot" aria-hidden="true"></i>Live</span>
     </section>
@@ -74,8 +79,6 @@ export function render(main, ctx) {
     </div>
     ${canOrders ? `
     <div class="panel tabbed">
-      <img class="p-cover" src="catalogue/images/catalogue-cover.jpg" alt="">
-      <span class="p-scrim" aria-hidden="true"></span>
       <h2 class="tab-tl">Nalozi</h2>
       ${orders.map((o) => `
         <button class="row" data-goto="/orders">
