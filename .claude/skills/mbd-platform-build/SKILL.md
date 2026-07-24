@@ -10,6 +10,26 @@ and `manbeardog13/Smart-Solutions` (Operativa). Every new MBD platform
 starts from this shape — craftsmanship stays constant, branding and
 workflows change per client.
 
+## Bootstrap (MANDATORY, before any code — no exceptions)
+
+Every new platform repo starts by installing the company contract and the
+parity tooling, copied from `manbeardog13/Smart-Solutions`:
+
+1. `docs/platform/DEFAULT_COMPANY_PLATFORM_STANDARD.md` — Toni's mandatory
+   platform contract (splash → login → role-aware dashboard sequence,
+   minimalism, adaptive one-product rule, token system, checklists). Copy
+   it VERBATIM; never edit, summarize, or fork it.
+2. `CLAUDE.md` referencing the standard with the §26 recommended
+   instruction, plus the project facts and quality gates.
+3. `scripts/audit-login.mjs` — the logon-parity audit. The logon of every
+   MBD platform must measure within ±2px of the ASC phone build
+   (`asc/app/login.html`) at 390×844: card edge gaps, every element's
+   size, side gaps, stacking gaps, fonts and radii. Only brand-intrinsic
+   metrics are exempt (logo aspect, text-metric edges). Scale the card —
+   never cut it.
+4. The logon + splash implementation from the `mbd-design-language` skill,
+   re-tinted to the client brand (accent color, logo, city line).
+
 ## Architecture (ASC pattern — do not reinvent)
 
 - **Static PWA, no build step.** Plain ES modules served from the repo
