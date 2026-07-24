@@ -12,9 +12,11 @@ export const DEMO_USERS = [
 
 export const DEMO_ITEMS = [
   { id: "SS-0001", name: "Aquarea M monoblok 9 kW", sku: "WH-MXC09J3E5", supplier: "Panasonic HR",
-    qty: 4, min: 2, batch: 2, loc: "A-1-2", img: "catalogue/thumbs/aquarea-monoblock.webp" },
+    qty: 4, min: 2, batch: 2, loc: "A-1-2", img: "catalogue/thumbs/aquarea-monoblock.webp",
+    imgFull: "catalogue/images/aquarea-monoblock.png" },
   { id: "SS-0002", name: "Aquarea All-in-One 7 kW", sku: "WH-ADC0709J3E5", supplier: "Panasonic HR",
-    qty: 2, min: 2, batch: 2, loc: "A-1-3", img: "catalogue/thumbs/aquarea-unit-allinone.webp" },
+    qty: 2, min: 2, batch: 2, loc: "A-1-3", img: "catalogue/thumbs/aquarea-unit-allinone.webp",
+    imgFull: "catalogue/images/aquarea-unit-allinone.png" },
   // Consumables have no catalogue photo — the UI renders an honest initial
   // tile instead of borrowing a wrong product image (catalogue is authoritative).
   { id: "SS-0003", name: "Bakrena cijev 1/4\" (m)", sku: "CU-14", supplier: "Metal d.o.o.",

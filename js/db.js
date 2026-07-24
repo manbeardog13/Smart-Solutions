@@ -12,7 +12,7 @@ import { reorderProposal } from "./domain.js";
 const DB_KEY = "ss.demo.db";
 // Bump whenever seed shape or content changes: stale blobs from older
 // installs re-seed instead of crashing views that expect the new shape.
-const DB_VERSION = 3;
+const DB_VERSION = 4; // v4: items carry imgFull (catalogue panel backdrops)
 
 // Same-millisecond writes must still get unique ids.
 let idSeq = 0;

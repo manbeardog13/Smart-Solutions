@@ -3,7 +3,7 @@
 // ============================================================================
 import * as db from "../db.js";
 import { lowStockItems, dealDelays } from "../domain.js";
-import { esc, icon, thumb } from "../ui.js";
+import { esc, icon, thumb, hrCount } from "../ui.js";
 
 export function render(main, ctx) {
   const views = ctx.views || [];
@@ -21,14 +21,6 @@ export function render(main, ctx) {
     { meta: "Nedavna kretanja", v: String(movements.length), alarm: false },
   ];
 
-  // The login stage chips replay these real counts on the next visit —
-  // never fake numbers on the gate (ASC rule).
-  try {
-    localStorage.setItem("ss.loginChips", JSON.stringify({
-      ready: items.length - low.length, low: low.length,
-    }));
-  } catch { /* storage full — chips just fall back to feature labels */ }
-
   // Deal from the center out: order pairs [1,2] then [0,3] etc. On a 4-card
   // row the two middle cards land first, edges follow — all inside 620 ms.
   const delays = dealDelays(cards.length);
@@ -37,7 +29,21 @@ export function render(main, ctx) {
     .sort((a, b) => a.dist - b.dist)
     .map((c, rank) => ({ ...c, delay: delays[rank] }));
 
+  // Hero stage: the logon stage language inside the app — dark panel, short
+  // two-tone greeting, one honest status line, catalogue imagery, notch tab.
+  const h = new Date().getHours();
+  const hi = h < 10 ? "Dobro jutro" : h < 18 ? "Dobar dan" : "Dobra večer";
+  const status = low.length === 0 ? "Sve je pod kontrolom."
+    : hrCount(low.length, ["pozicija traži pažnju.", "pozicije traže pažnju.", "pozicija traži pažnju."]);
+
   main.innerHTML = `
+    <section class="hero">
+      <div class="hero-img" aria-hidden="true"
+           style="background-image:url('catalogue/images/aquarea-lifestyle.jpg')"></div>
+      <h1 class="stage-title">${esc(hi)}, ${esc((ctx.session && ctx.session.name) || "")}.<br>
+        <span>${esc(status)}</span></h1>
+      <span class="notch">Ploča · danas</span>
+    </section>
     <div class="cards deal">
       ${order.sort((a, b) => a.i - b.i).map((c) => `
         <div class="card ${c.alarm ? "alarm" : ""} ${c.i <= mid ? "from-right" : "from-left"}"
