@@ -25,8 +25,8 @@
 }
 :root[data-theme="dark"]{
   --ink:#F4F4F4; --ink2:#B0B0B0; --ink3:#8C8C8C; --ink4:#757575; --ink5:#2C2C2C;
-  --paper:#0D0D0D; --sunk:rgba(255,255,255,.06);
-  --glass:rgba(20,26,32,.42); --glass2:rgba(22,28,34,.58);
+  --paper:#0D0D0E; --sunk:rgba(255,255,255,.06);
+  --glass:rgba(23,24,27,.5); --glass2:rgba(27,28,31,.66);
   --line:rgba(255,255,255,.11); --line2:rgba(255,255,255,.2);
   --shadow-1:0 1px 2px rgba(0,0,0,.35), 0 10px 30px rgba(0,0,0,.45);
   --shadow-2:0 2px 6px rgba(0,0,0,.4), 0 24px 60px rgba(0,0,0,.6);
@@ -35,10 +35,10 @@
 }
 
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;padding:0;background:var(--paper);min-height:100%}
+html,body{margin:0;padding:0;background:var(--paper);min-height:100%;
+          width:100%;overflow-x:hidden}
 body{font-family:var(--sans);color:var(--ink);-webkit-font-smoothing:antialiased;
-     transition:background .18s linear,color .18s linear;
-     padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+     transition:background .18s linear,color .18s linear}
 button{font-family:inherit;color:inherit;background:none;border:0;cursor:pointer;font-size:inherit}
 :focus-visible{outline:2px solid var(--red);outline-offset:2px}
 a{color:var(--red);text-underline-offset:3px}
@@ -76,41 +76,78 @@ a{color:var(--red);text-underline-offset:3px}
 @keyframes sheen{0%{background-position:130% 0;opacity:1}100%{background-position:-40% 0;opacity:1}}
 .logo-mark-fx{--logo-mask:url("../brand/logo-mark.png")}
 .logo-word-fx{--logo-mask:url("../brand/logo-word.png")}
+.logo-full-fx{--logo-mask:url("../brand/logo-full.png")}
 .logo-idle img{animation:logo-idle 7s ease-in-out infinite}
 @keyframes logo-idle{0%,100%{filter:drop-shadow(0 0 0 rgba(221,4,38,0))}
   50%{filter:drop-shadow(0 4px 16px rgba(221,4,38,.28))}}
 
 .meta{font-size:9px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:var(--ink3)}
 
-/* ══ splash ══ */
-.splash{position:fixed;inset:0;z-index:100;display:grid;place-items:center;align-content:center;
-        gap:26px;background:#0b1220 url("../brand/bg-night.svg") center bottom/cover no-repeat}
-.splash::before{content:"";position:absolute;inset:0;
-  background:radial-gradient(60% 50% at 50% 42%, rgba(11,18,32,.0) 0%, rgba(11,18,32,.72) 100%)}
-.splash-mark{width:120px;height:118px;position:relative;animation:splash-in .8s var(--snap) both;
-  filter:drop-shadow(0 10px 34px rgba(221,4,38,.4))}
-.splash-mark img{width:100%;height:100%;object-fit:contain;display:block}
-.splash-word{width:min(230px,56vw);position:relative;animation:splash-in .8s var(--snap) .18s both;
-  filter:drop-shadow(0 4px 22px rgba(0,0,0,.5))}
-.splash-word img{width:100%;display:block}
-.splash.out{animation:splash-out .32s var(--snap) both}
-@keyframes splash-in{from{opacity:0;transform:scale(.85) translateY(10px)}to{opacity:1;transform:none}}
-@keyframes splash-out{to{opacity:0;visibility:hidden}}
-
-/* ══ login gate — nature scene, fogged glass card, soft light shaft ══ */
-.gate{min-height:100dvh;display:grid;place-items:center;padding:24px;position:relative;z-index:1}
-.gate-bg{position:fixed;inset:0;z-index:0;background-image:var(--bg-scene);
-         background-size:cover;background-position:center bottom}
-.gate-bg::after{content:"";position:absolute;inset:0;
-  background:linear-gradient(180deg,
-    color-mix(in srgb, var(--paper) 18%, transparent) 0%,
-    transparent 45%,
-    color-mix(in srgb, var(--paper) 34%, transparent) 100%)}
-.login{width:min(408px,94vw);background:var(--glass2);
-       backdrop-filter:blur(42px) saturate(180%);-webkit-backdrop-filter:blur(42px) saturate(180%);
-       border:1px solid var(--line);border-radius:26px;padding:32px 28px;position:relative;z-index:1;
-       overflow:hidden;box-shadow:var(--shadow-2),var(--hairline);
+/* ══ login gate — nature scene, fogged glass card, soft light shaft ══
+   Startup (.enter): the app fades in, the logo symbol blur-fades in first,
+   then one quick shimmer of light crosses the screen and reveals the card.
+   No bouncing, no scaling — and after startup the logo never animates. */
+.gate{min-height:100dvh;display:grid;place-items:center;position:relative;z-index:1;
+      padding:calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom))}
+.gate.enter{animation:app-fade .5s ease both}
+@keyframes app-fade{from{opacity:0}}
+.gate.enter .login-logo img{animation:blur-in .8s ease .15s both}
+@keyframes blur-in{from{opacity:0;filter:blur(16px)}to{opacity:1;filter:blur(0)}}
+.gate .shimmer{position:fixed;inset:0;z-index:3;pointer-events:none;opacity:0;
+  background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.5) 50%,transparent 60%);
+  background-size:280% 100%;background-position:120% 0}
+.gate.enter .shimmer{animation:screen-shimmer .8s ease .9s}
+:root[data-theme="dark"] .gate .shimmer{
+  background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.22) 50%,transparent 60%);
+  background-size:280% 100%}
+@keyframes screen-shimmer{0%{opacity:1;background-position:120% 0}
+  100%{opacity:1;background-position:-60% 0}}
+.gate:not(.enter) .shimmer{display:none}
+/* the shimmer "reveals" the glass card as it passes */
+.gate.enter .login{animation:card-reveal .7s ease .95s both}
+@keyframes card-reveal{from{opacity:0;filter:blur(8px)}to{opacity:1;filter:blur(0)}}
+.gate:not(.enter) .login{animation:card-in .3s var(--snap) both}
+/* the login logo is still: no hover lift, no idle glow, no click animation —
+   only the single startup sheen across the symbol */
+.login .logo-fx{transition:none}
+.login .logo-fx:hover{transform:none;filter:none}
+.login .logo-fx:hover::after{animation:none}
+.login .shine-once::after{animation:sheen .9s var(--snap) 1.7s}
+/* the logon backdrop is a single quiet tone, like ASC — the panel's
+   underglow is what gives the screen its depth */
+.gate-bg{position:fixed;inset:0;z-index:0;background:var(--paper)}
+.login{width:min(392px,92vw);background:rgba(255,255,255,.94);
+       backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%);
+       border:1px solid var(--line);border-radius:32px;padding:28px 26px 24px;position:relative;
+       z-index:1;overflow:hidden;
+       box-shadow:0 24px 60px -12px rgba(15,18,20,.28),
+                  0 48px 120px -24px rgba(221,4,38,.14),
+                  var(--hairline);
        animation:card-in .4s var(--snap) both}
+:root[data-theme="dark"] .login{background:rgba(23,24,27,.94);
+  box-shadow:0 24px 60px -12px rgba(0,0,0,.7),
+             0 48px 120px -24px rgba(221,4,38,.2),
+             var(--hairline)}
+.login-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.login-logo{width:148px;flex:0 0 148px}
+.login-logo img{width:100%;display:block}
+.hello{font-family:var(--sans);font-weight:800;font-size:27px;letter-spacing:-.02em;
+       margin:0 0 3px;color:var(--ink)}
+.hello-sub{margin:0 0 20px;font-size:14px;color:var(--ink3)}
+.btn-google{background:rgba(255,255,255,.55);border:1px solid var(--line);color:var(--ink);
+            font-weight:700;border-radius:16px}
+:root[data-theme="dark"] .btn-google{background:rgba(255,255,255,.07)}
+.btn-google:hover{border-color:var(--line2)}
+.field{position:relative;margin-bottom:12px}
+.f-ic{position:absolute;left:15px;top:50%;transform:translateY(-50%);width:19px;height:19px;
+      color:var(--ink3);pointer-events:none}
+.field input{padding-left:46px !important}
+.f-eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:40px;height:40px;
+       display:grid;place-items:center;color:var(--ink3);border-radius:10px}
+.f-eye:hover{color:var(--ink)}
+.f-eye svg{width:20px;height:20px}
+.field:has(.f-eye) input{padding-right:48px !important}
+.btn-cta{border-radius:18px;padding:15px;font-size:15.5px;gap:10px}
 /* the light shaft: a soft diagonal beam falling across the frost */
 .login::before{content:"";position:absolute;top:-70%;right:-24%;width:52%;height:240%;
   transform:rotate(24deg);pointer-events:none;
@@ -118,13 +155,8 @@ a{color:var(--red);text-underline-offset:3px}
 :root[data-theme="dark"] .login::before{
   background:linear-gradient(90deg,transparent,rgba(255,255,255,.09) 45%,rgba(255,255,255,.03) 60%,transparent)}
 @keyframes card-in{from{opacity:0;transform:translateY(16px) scale(.98)}to{opacity:1;transform:none}}
-.login .mark{display:block;width:64px;height:63px;margin:0 auto 14px}
-.login .word{display:block;width:168px;margin:0 auto 6px;text-align:center}
-.login .sub{text-align:center;margin:0 0 22px;font-size:12.5px;color:var(--ink3)}
-.login label{display:block;font-size:10px;font-weight:800;letter-spacing:.12em;
-             text-transform:uppercase;color:var(--ink3);margin:14px 2px 5px}
-.login input{width:100%;background:var(--sunk);border:1px solid transparent;border-radius:var(--r-ctl);
-             padding:13px 15px;color:var(--ink);font-size:15px;font-family:inherit;outline:none;
+.login input{width:100%;background:var(--sunk);border:1px solid var(--line);border-radius:16px;
+             padding:13px 15px;color:var(--ink);font-size:16px;font-family:inherit;outline:none;
              box-shadow:inset 0 1px 2px rgba(15,18,20,.05);
              transition:border-color .12s linear,background .12s linear}
 .login input:focus{border-color:var(--red);background:transparent}
@@ -134,15 +166,18 @@ a{color:var(--red);text-underline-offset:3px}
                 box-shadow var(--t) linear,transform var(--t) var(--snap)}
 .btn:hover{border-radius:9px;transform:translateY(-1px)}
 .btn:active{transform:translateY(0) scale(.99)}
-.btn-red{background:var(--red);color:#fff;box-shadow:0 6px 20px rgba(221,4,38,.3),var(--hairline)}
-.btn-red:hover{background:var(--red-d);box-shadow:0 10px 28px rgba(221,4,38,.4)}
+.btn-red{background:linear-gradient(180deg,#F4415A 0%,var(--red) 55%,#BE0322 100%);
+         color:#fff;box-shadow:0 10px 24px rgba(221,4,38,.35),
+         inset 0 1px 0 rgba(255,255,255,.35)}
+.btn-red:hover{background:linear-gradient(180deg,#F75065 0%,#E20527 55%,var(--red-d) 100%);
+         box-shadow:0 14px 30px rgba(221,4,38,.45),inset 0 1px 0 rgba(255,255,255,.35)}
 .btn-ghost{background:var(--sunk);color:var(--ink2)}
 .btn-ghost:hover{color:var(--ink)}
-.login .aux{display:flex;justify-content:space-between;align-items:center;margin:10px 2px 18px;
-            font-size:12px;color:var(--ink3)}
-.login .aux button{color:var(--red);font-weight:700;font-size:12px}
+.login .aux{display:flex;justify-content:space-between;align-items:center;margin:2px 2px 16px;
+            font-size:13px}
+.login .aux button{color:var(--ink2);font-weight:700;font-size:13px}
 .login .or{display:flex;align-items:center;gap:10px;color:var(--ink4);font-size:10px;
-           letter-spacing:.14em;text-transform:uppercase;margin:14px 0}
+           letter-spacing:.14em;text-transform:uppercase;margin:16px 0}
 .login .or::before,.login .or::after{content:"";flex:1;height:1px;background:var(--line)}
 .login .create{text-align:center;margin-top:18px;font-size:12.5px;color:var(--ink3)}
 .login .create button{color:var(--red);font-weight:800}
@@ -158,16 +193,12 @@ a{color:var(--red);text-underline-offset:3px}
 .demo-user span{font-size:10px;color:var(--ink3);letter-spacing:.08em;text-transform:uppercase}
 
 /* theme slider */
-.theme{display:inline-flex;align-items:center;gap:9px;padding:7px 9px;border-radius:9px;
-       transition:border-radius var(--t) var(--snap),background var(--t) linear}
-.theme:hover{background:var(--sunk)}
-.tr{width:44px;height:24px;flex:0 0 44px;border-radius:13px;background:var(--red);position:relative;
-    box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.theme{display:inline-flex;align-items:center;padding:6px;border-radius:999px}
+.tr{width:44px;height:24px;flex:0 0 44px;border-radius:13px;background:var(--red);position:relative}
 .tr i{position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;
+      box-shadow:0 1px 3px rgba(0,0,0,.25);
       transition:transform .16s var(--snap),background .16s linear}
 :root[data-theme="dark"] .tr i{transform:translateX(20px);background:var(--night)}
-.theme .lbl{font-size:9.5px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;color:var(--ink3)}
-.gate .theme{position:fixed;top:max(14px,env(safe-area-inset-top));right:18px;z-index:2}
 
 /* ══ app shell ══ */
 .shell{min-height:100dvh;position:relative;z-index:1}
@@ -221,7 +252,8 @@ main{min-height:100dvh;padding-left:var(--rail);transition:padding-left .2s var(
 /* top bar */
 .top{position:sticky;top:0;z-index:30;background:var(--glass2);
      backdrop-filter:blur(26px) saturate(190%);-webkit-backdrop-filter:blur(26px) saturate(190%);
-     border-bottom:1px solid var(--line);padding:13px 26px;display:flex;align-items:center;gap:14px}
+     border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;
+     padding:calc(13px + env(safe-area-inset-top)) 26px 13px}
 .top h1{font-family:var(--display);font-weight:900;font-size:18px;text-transform:uppercase;
         letter-spacing:-.035em;margin:0;line-height:1}
 .demo-badge{font-size:8.5px;font-weight:900;letter-spacing:.12em;color:#fff;background:var(--red);
@@ -284,7 +316,7 @@ main{min-height:100dvh;padding-left:var(--rail);transition:padding-left .2s var(
            color:#fff;text-transform:uppercase}
 .searchbar{margin:0 0 12px;display:flex;gap:9px}
 .searchbar input{flex:1;background:var(--glass2);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow-1);
-                 padding:12px 15px;color:var(--ink);font-size:14.5px;font-family:inherit;outline:none;
+                 padding:12px 15px;color:var(--ink);font-size:16px;font-family:inherit;outline:none;
                  transition:border-color .12s linear}
 .searchbar input:focus{border-color:var(--red)}
 
@@ -386,7 +418,17 @@ main{min-height:100dvh;padding-left:var(--rail);transition:padding-left .2s var(
   .nl::before{display:none}
   .shelf{display:none}
   .stage{padding:16px 14px 80px}
-  .top{padding:12px 14px}
+  .top{padding:calc(10px + env(safe-area-inset-top)) 14px 10px}
+  /* the gate fits like ASC: compact card, nothing oversized */
+  .login{width:min(354px,92vw);padding:24px 20px 20px;border-radius:22px}
+  .login .mark{width:50px;height:49px;margin-bottom:10px}
+  .login .word{width:136px;margin-bottom:2px}
+  .login label{margin-top:11px}
+  .login input{padding:11px 13px}
+  .login .btn{padding:12px;font-size:14.5px}
+  .login .or{margin:11px 0}
+  .login .create{margin-top:13px;font-size:12px}
+  .card-theme{top:12px;right:12px}
   .nl.pin{display:none}
   /* the rail foot is gone on phones — essential controls surface up top */
   .top-mini{display:inline-flex}
