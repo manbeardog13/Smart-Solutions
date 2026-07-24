@@ -95,18 +95,14 @@ function renderGate() {
   // then the splash fades and the gate's entrance sequence takes over.
   const splash = first ? `
     <div class="splash" aria-hidden="true">
-      <img class="sp-mark" src="brand/logo-mark.png" alt="">
-      <span class="sp-bar"><i></i></span>
+      <div class="sp-core">
+        <img class="sp-mark" src="brand/logo-mark.png" alt="">
+        <i class="sp-rule"></i>
+      </div>
     </div>` : "";
   root.innerHTML = `${splash}
     <div class="gate">
-      <div class="auth-bg" aria-hidden="true">
-        <i class="ab-bloom"></i>
-        <i class="ab-sash"></i>
-        <i class="ab-arc"></i>
-        <i class="ab-cursor"></i>
-        <i class="ab-grain"></i>
-      </div>
+      <div class="auth-bg" aria-hidden="true"></div>
       <div class="login-card" role="dialog" aria-label="Prijava">
         <div class="lc-top">
           <img class="lc-logo" src="brand/logo-full.png" alt="smart solutions">
@@ -138,6 +134,7 @@ function renderGate() {
           <button class="btn-brand" type="submit">Prijavi se
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </button>
+          <p class="auth-msg" role="status" aria-live="polite"></p>
           <p class="auth-create">Prvi put? <button type="button" class="auth-create-link" data-create>Napravi račun</button></p>
         </form>
       </div>
@@ -170,21 +167,13 @@ function renderGate() {
     eye.setAttribute("aria-label", show ? "Sakrij lozinku" : "Prikaži lozinku");
   };
 
-  // Cursor glow — moved with transform only (compositor frame, zero lag).
-  // Pointer devices only; reduced-motion and touch hide it via CSS.
-  const glow = root.querySelector(".ab-cursor");
-  if (renderGate._glowMove) removeEventListener("pointermove", renderGate._glowMove);
-  if (glow && matchMedia("(hover: hover)").matches) {
-    renderGate._glowMove = (e) => {
-      if (!glow.isConnected) {
-        removeEventListener("pointermove", renderGate._glowMove);
-        renderGate._glowMove = null;
-        return;
-      }
-      glow.style.transform = `translate3d(${e.clientX - 260}px, ${e.clientY - 260}px, 0)`;
-    };
-    addEventListener("pointermove", renderGate._glowMove, { passive: true });
-  }
+  // The switch emits a short brand-red micro-glow whenever it is pressed —
+  // the color is the company's, hardcoded by the platform standard.
+  const sw = root.querySelector(".sw");
+  if (sw) sw.addEventListener("click", () => {
+    sw.classList.add("kick");
+    setTimeout(() => sw.classList.remove("kick"), 450);
+  });
 
   syncThemeControls();
   const soon = () => toast("Dostupno s produkcijskim backendom (Supabase).");

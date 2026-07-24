@@ -52,10 +52,18 @@ Reference implementations: `css/app.css` (live tokens),
 
 ## Logon screen (hard standard — owner-locked, every MBD platform)
 
-Matches the ASC PHONE BUILD (the shipped app, not the repo's newer
-split-shell experiment — the owner compared screenshots and locked the
-card). Live at Smart Solutions `js/app.js renderGate()` + the
-login-gate section of `css/app.css`.
+Matches the ASC PHONE BUILD (`asc/app/login.html` — the shipped app, not
+the repo's newer split-shell experiment; the owner compared screenshots
+and locked the card). Live at Smart Solutions `js/app.js renderGate()` +
+the login-gate section of `css/app.css`. Parity is MEASURED, not
+eyeballed: `scripts/audit-login.mjs` compares every metric (card edge
+gaps, element sizes, side gaps, stacking gaps, fonts, radii) against the
+ASC ruler and must pass within ±2px before shipping. Type is Inter with
+Sora display (ASC pairing, Google Fonts). The theme switch is 38×22 with
+a spring thumb and a `.kick` micro-glow in the BRAND color on every
+press (red for Smart Solutions). Canvas: `#EEF0F1`/`#0A0C11` with three
+quiet radial pools (brand-tinted, cool blue, gunmetal) + fine grain — no
+drawn shapes, arcs, or lines, ever.
 
 - **Startup splash**: the brand mark ALONE (no wordmark), centered on
   the flat canvas with a small load bar (132×3px capsule, brand-color
