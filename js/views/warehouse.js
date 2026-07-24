@@ -22,7 +22,8 @@ export function render(main, ctx) {
              autocomplete="off" aria-label="Pretraga skladišta">
     </div>
     <div class="panel tabbed roomy">
-      <img class="p-img" src="catalogue/images/aquarea-range.png" alt="">
+      <img class="p-cover" src="catalogue/images/aquarea-lifestyle.jpg" alt="">
+      <span class="p-scrim" aria-hidden="true"></span>
       <h2 class="tab-tl">Skladište</h2>
       <span class="tab-corner" id="wh-count"></span>
       <div id="wh-list"></div>
@@ -153,11 +154,11 @@ function renderDetail(main, ctx) {
 
   target.innerHTML = `
     <div class="panel tabbed">
-      ${item.imgFull ? `<img class="p-img" src="${esc(item.imgFull)}" alt="">` : ""}
+      ${item.imgFull ? `<img class="p-cover" src="${esc(item.imgFull)}" alt="">
+      <span class="p-scrim" aria-hidden="true"></span>` : ""}
       <h2 class="tab-tl">Skenirani artikl</h2>
       <span class="tab-corner mono">${esc(item.id)}</span>
       <div class="row">
-        ${thumb(item, "detail-img")}
         <span class="b"><span class="n">${esc(item.name)}</span>
           <span class="a">${esc(item.supplier)}</span>
           ${mismatch ? `<span class="a warn">⚠ Naljepnica navodi drugog dobavljača

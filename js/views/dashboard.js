@@ -74,7 +74,8 @@ export function render(main, ctx) {
     </div>
     ${canOrders ? `
     <div class="panel tabbed">
-      <img class="p-img" src="catalogue/thumbs/catalogue-cover.webp" alt="">
+      <img class="p-cover" src="catalogue/images/catalogue-cover.jpg" alt="">
+      <span class="p-scrim" aria-hidden="true"></span>
       <h2 class="tab-tl">Nalozi</h2>
       ${orders.map((o) => `
         <button class="row" data-goto="/orders">
