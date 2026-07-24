@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="hr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#F7F7F6">
+<title>Smart Solutions · Operativa</title>
+<link rel="icon" type="image/png" sizes="32x32" href="brand/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="brand/apple-touch-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="css/app.css">
+<script>
+// Before first paint: honor the stored theme (or the OS) so dark-mode users
+// never get a white flash while the module graph loads.
+try {
+  var t = JSON.parse(localStorage.getItem("ss.theme"));
+  if (t === null || t === undefined) t = matchMedia("(prefers-color-scheme: dark)").matches;
+  document.documentElement.setAttribute("data-theme", t ? "dark" : "light");
+} catch (e) { /* default light */ }
+</script>
+</head>
+<body>
+<!-- Splash: shown immediately, replaced by the login gate or the app shell. -->
+<div id="splash" class="splash" aria-hidden="true">
+  <div class="splash-mark logo-fx logo-mark-fx shine">
+    <img src="brand/logo-mark.png" alt="">
+  </div>
+  <div class="splash-word"><img src="brand/logo-word.png" alt="smart solutions"></div>
+</div>
+<div id="app-root"></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<noscript>Smart Solutions Operativa zahtijeva JavaScript.</noscript>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

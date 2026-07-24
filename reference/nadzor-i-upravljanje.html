@@ -1,0 +1,374 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#FFFFFF">
+<title>Smart Solutions — Nadzor i upravljanje</title>
+<style>
+:root{
+  --red:#DD0426; --night:#121212;
+  --red-d:#B00320; --red-soft:rgba(221,4,38,.08);
+  --ink:#121212; --ink2:#4F4F4F; --ink3:#6B6B6B; --ink4:#BDBDBD; --ink5:#E4E4E4;
+  --paper:#F7F7F6; --sunk:rgba(18,18,18,.05);
+  --glass:rgba(255,255,255,.58); --glass2:rgba(255,255,255,.74);
+  --line:rgba(18,18,18,.10); --line2:rgba(18,18,18,.2);
+  --display:"Archivo Black","Arial Black","Helvetica Neue",-apple-system,BlinkMacSystemFont,
+            "Segoe UI",Roboto,system-ui,sans-serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono","Cascadia Mono",Consolas,monospace;
+  --snap:cubic-bezier(.2,0,0,1); --t:.14s;
+}
+:root[data-theme="dark"]{
+  --ink:#F4F4F4; --ink2:#B0B0B0; --ink3:#8C8C8C; --ink4:#4E4E4E; --ink5:#2C2C2C;
+  --paper:#0D0D0D; --sunk:rgba(255,255,255,.06);
+  --glass:rgba(255,255,255,.045); --glass2:rgba(255,255,255,.07);
+  --line:rgba(255,255,255,.11); --line2:rgba(255,255,255,.2);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--paper)}
+body{font-family:var(--sans);color:var(--ink);-webkit-font-smoothing:antialiased;
+     transition:background .18s linear,color .18s linear}
+button{font-family:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+a{color:var(--red);text-underline-offset:3px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+::selection{background:var(--red);color:#fff}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.wash{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(700px 480px at 92% -8%, rgba(221,4,38,.13), transparent 62%),
+             radial-gradient(560px 420px at 2% 102%, rgba(18,18,18,.09), transparent 60%)}
+:root[data-theme="dark"] .wash{
+  background:radial-gradient(700px 480px at 92% -8%, rgba(221,4,38,.22), transparent 62%),
+             radial-gradient(560px 420px at 2% 102%, rgba(255,255,255,.05), transparent 60%)}
+
+.wrap{max-width:1080px;margin:0 auto;padding:0 26px 90px;position:relative;z-index:1}
+.d{font-family:var(--display);font-weight:900;text-transform:uppercase;letter-spacing:-.035em;line-height:.94}
+.meta{font-size:9px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:var(--ink3)}
+
+/* ══ bar ══ */
+.bar{position:sticky;top:0;z-index:20;background:var(--glass2);
+     backdrop-filter:blur(26px) saturate(190%);-webkit-backdrop-filter:blur(26px) saturate(190%);
+     border-bottom:1px solid var(--line);padding:12px 26px;display:flex;align-items:center;gap:14px;
+     margin:0 -26px 0}
+.mark{width:30px;height:30px;flex:0 0 30px;color:var(--red);display:grid;place-items:center}
+.lg{width:100%;height:100%;display:block}
+.bar b{font-family:var(--display);font-weight:900;font-size:14px;text-transform:lowercase;
+       letter-spacing:-.045em;line-height:1;color:var(--red)}
+.theme{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;margin-left:auto;
+       transition:border-radius var(--t) var(--snap),background var(--t) linear}
+.theme:hover{border-radius:0;background:var(--sunk)}
+.tr{width:42px;height:23px;flex:0 0 42px;border-radius:12px;background:var(--red);position:relative;
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.tr i{position:absolute;top:2px;left:2px;width:19px;height:19px;border-radius:50%;background:#fff;
+      transition:transform .16s var(--snap),background .16s linear}
+:root[data-theme="dark"] .tr i{transform:translateX(19px);background:var(--night)}
+
+/* ══ hero ══ */
+.hero{padding:54px 0 34px;border-bottom:1px solid var(--line)}
+.hero h1{font-family:var(--display);font-weight:900;text-transform:uppercase;letter-spacing:-.045em;
+         font-size:clamp(30px,5.4vw,58px);line-height:.92;margin:12px 0 16px;max-width:16ch}
+.hero h1 em{font-style:normal;color:var(--red)}
+.hero p{color:var(--ink2);max-width:56ch;font-size:15px;line-height:1.6;margin:0}
+.stamp{display:inline-block;background:var(--red);color:#fff;font-size:9px;font-weight:900;
+       letter-spacing:.14em;text-transform:uppercase;padding:4px 8px}
+
+/* ══ verdict ══ */
+.verdict{background:var(--night);color:#fff;padding:28px;margin:26px 0;position:relative;overflow:hidden}
+:root[data-theme="dark"] .verdict{background:var(--red)}
+.verdict h2{font-family:var(--display);font-weight:900;font-size:12px;text-transform:uppercase;
+            letter-spacing:.14em;color:var(--red);margin:0 0 12px}
+:root[data-theme="dark"] .verdict h2{color:#fff;opacity:.7}
+.verdict p{margin:0;font-size:19px;line-height:1.45;max-width:52ch;font-weight:600}
+.verdict p+p{margin-top:12px;font-size:14px;font-weight:400;color:rgba(255,255,255,.7)}
+.order{font-family:var(--display);font-weight:900;font-size:15px;text-transform:uppercase;
+       letter-spacing:-.02em;color:var(--red);margin-top:18px}
+:root[data-theme="dark"] .order{color:#fff}
+
+section{margin:46px 0}
+.sh{display:flex;align-items:baseline;gap:12px;border-bottom:1px solid var(--line);padding-bottom:9px;
+    margin-bottom:20px}
+.sh h2{font-family:var(--display);font-weight:900;font-size:17px;text-transform:uppercase;
+       letter-spacing:-.035em;margin:0}
+.sh .n{font-family:var(--display);font-weight:900;font-size:17px;color:var(--red);letter-spacing:-.03em}
+
+/* ══ split ══ */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+@media(max-width:760px){.split{grid-template-columns:1fr}}
+.col{background:var(--glass);backdrop-filter:blur(24px) saturate(190%);
+     -webkit-backdrop-filter:blur(24px) saturate(190%);border:1px solid var(--line);
+     border-radius:13px;padding:20px;position:relative;overflow:hidden;
+     transition:border-radius var(--t) var(--snap),border-color var(--t) linear}
+.col::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;transform:scaleY(0);
+             transform-origin:top;transition:transform var(--t) var(--snap)}
+.col:hover{border-radius:0;border-color:var(--line2)}
+.col:hover::before{transform:scaleY(1)}
+.col.loc::before{background:var(--ink)} .col.cld::before{background:var(--red)}
+.col h3{font-family:var(--display);font-weight:900;font-size:13px;text-transform:uppercase;
+        letter-spacing:-.02em;margin:0 0 3px}
+.col.cld h3{color:var(--red)}
+.col .cap{font-size:10px;color:var(--ink3);margin:0 0 15px;letter-spacing:.1em;text-transform:uppercase;
+          font-weight:800}
+.col ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:9px}
+.col li{font-size:13px;color:var(--ink2);line-height:1.45;padding-left:13px;position:relative}
+.col li::before{content:"";position:absolute;left:0;top:.62em;width:5px;height:1px;background:var(--ink4)}
+.col li b{color:var(--ink);font-weight:800}
+.col li .mono{color:var(--red);font-size:11.5px}
+
+/* ══ fork ══ */
+.fork{background:var(--red);color:#fff;padding:24px;margin-top:11px}
+.fork h3{font-family:var(--display);font-weight:900;font-size:14px;text-transform:uppercase;
+         letter-spacing:-.02em;margin:0 0 10px}
+.fork p{font-size:13.5px;line-height:1.5;margin:0;color:rgba(255,255,255,.9);max-width:70ch}
+.fork p+p{margin-top:9px}
+.fork b{color:#fff}
+
+/* ══ table ══ */
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:13px;background:var(--glass);
+    backdrop-filter:blur(24px) saturate(190%);-webkit-backdrop-filter:blur(24px) saturate(190%)}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:12.5px}
+th,td{text-align:left;padding:11px 13px;border-bottom:1px solid var(--line);vertical-align:top}
+thead th{font-size:8.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink3);font-weight:900}
+tbody tr:last-child td{border-bottom:0}
+tbody tr{transition:background var(--t) linear}
+tbody tr:hover{background:var(--sunk)}
+td .mono{color:var(--red);font-weight:700}
+.ok{color:var(--ink);font-weight:800;font-size:9px;letter-spacing:.1em;text-transform:uppercase}
+.no{color:var(--red);font-weight:800;font-size:9px;letter-spacing:.1em;text-transform:uppercase}
+
+/* ══ tiers ══ */
+.tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
+@media(max-width:860px){.tiers{grid-template-columns:1fr}}
+.tier{background:var(--glass);backdrop-filter:blur(24px) saturate(190%);
+      -webkit-backdrop-filter:blur(24px) saturate(190%);border:1px solid var(--line);
+      border-radius:13px;padding:20px;display:flex;flex-direction:column;gap:12px;
+      transition:border-radius var(--t) var(--snap),border-color var(--t) linear}
+.tier:hover{border-radius:0;border-color:var(--line2)}
+.tier.pick{background:var(--night);color:#fff;border-color:transparent}
+:root[data-theme="dark"] .tier.pick{background:var(--red)}
+.tier.pick .meta{color:rgba(255,255,255,.55)}
+.tier .p{font-family:var(--display);font-weight:900;font-size:30px;letter-spacing:-.05em;line-height:1}
+.tier.pick .p{color:var(--red)}
+:root[data-theme="dark"] .tier.pick .p{color:#fff}
+.tier .who{font-size:12px;color:var(--ink2);min-height:2.6em;line-height:1.45}
+.tier.pick .who{color:rgba(255,255,255,.72)}
+.tier ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:7px;font-size:12px}
+.tier li{padding-left:12px;position:relative;color:var(--ink2);line-height:1.4}
+.tier.pick li{color:rgba(255,255,255,.75)}
+.tier li::before{content:"";position:absolute;left:0;top:.55em;width:4px;height:4px;background:var(--red)}
+.tier .cost{font-size:11px;color:var(--red);border-top:1px solid var(--line);padding-top:10px;margin-top:auto;
+            font-weight:700;line-height:1.45}
+.tier.pick .cost{border-top-color:rgba(255,255,255,.2);color:#fff}
+
+/* ══ action ══ */
+.act{border:1px solid var(--red);border-radius:13px;padding:24px;background:var(--red-soft);
+     transition:border-radius var(--t) var(--snap)}
+.act:hover{border-radius:0}
+.act h3{font-family:var(--display);font-weight:900;font-size:15px;text-transform:uppercase;
+        letter-spacing:-.03em;color:var(--red);margin:0 0 9px}
+.act p{font-size:13.5px;color:var(--ink2);margin:0;line-height:1.5;max-width:70ch}
+.act ol{margin:16px 0 0;padding:0;list-style:none;counter-reset:s;display:flex;flex-direction:column;gap:10px}
+.act li{font-size:13px;color:var(--ink2);line-height:1.45;counter-increment:s;padding-left:30px;
+        position:relative}
+.act li::before{content:counter(s);position:absolute;left:0;top:0;width:20px;height:20px;
+  background:var(--red);color:#fff;font-family:var(--display);font-weight:900;font-size:10px;
+  display:grid;place-items:center}
+.act li b{color:var(--ink)}
+
+/* ══ stats ══ */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}
+@media(max-width:640px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--line);border-radius:12px;
+      padding:16px;transition:border-radius var(--t) var(--snap)}
+.stat:hover{border-radius:0}
+.stat .v{font-family:var(--display);font-weight:900;font-size:30px;letter-spacing:-.05em;line-height:1}
+.caveat{border-left:3px solid var(--red);background:var(--sunk);padding:15px 17px;margin-top:16px;
+        font-size:12.5px;color:var(--ink2);line-height:1.55}
+.caveat b{color:var(--red)}
+footer{border-top:1px solid var(--line);margin-top:56px;padding-top:18px;font-size:10px;color:var(--ink3);
+       display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;letter-spacing:.08em;
+       text-transform:uppercase;font-weight:700}
+</style>
+
+<div class="wash"></div>
+<div class="wrap">
+  <div class="bar">
+    <div class="mark"><svg class="lg" viewBox="0 0 100 100" fill="none" aria-hidden="true"><g transform="rotate(45 50 50)"><rect x="17" y="17" width="66" height="66" stroke="currentColor" stroke-width="9"/><rect x="33" y="30" width="9" height="40" fill="currentColor"/><rect x="46" y="30" width="9" height="40" fill="currentColor"/><rect x="59" y="30" width="9" height="40" fill="currentColor"/></g></svg></div>
+    <b>smart solutions</b>
+    <button class="theme" id="theme" role="switch" aria-checked="false" aria-label="Tamni način">
+      <span class="tr"><i></i></span></button>
+  </div>
+
+  <header class="hero">
+    <span class="stamp">Smart Solutions · Gen 26</span>
+    <h1>Nadzor i <em>upravljanje</em></h1>
+    <p>Može li Smart Solutions izgraditi jedinstveni sloj nadzora i upravljanja nad Panasonic Aquareom —
+    lokalno, bez oblaka. Odgovor se promijenio tijekom istraživanja.</p>
+  </header>
+
+  <div class="verdict">
+    <h2>Zaključak</h2>
+    <p>Da. Jedinstveni lokalni sloj je izvediv danas. Nije istraživački projekt.</p>
+    <p>HeishaMon nije jedini lokalni put — i za Gen-26 M seriju vjerojatno nije pravi. Panasonic
+    prodaje <b>službeno, dokumentirano Modbus sučelje s objavljenom mapom registara</b>. Bolje
+    dokumentirano od vlastitog oblaka.</p>
+    <div class="order">Modbus prvo · HeishaMon drugo · oblak zadnje</div>
+  </div>
+
+  <section>
+    <div class="sh"><span class="n">01</span><h2>Lokalno · oblak</h2></div>
+    <div class="split">
+      <div class="col loc">
+        <h3>Lokalno</h3><p class="cap">Bez interneta · vaše</p>
+        <ul>
+          <li><b>Svi senzori i zadane vrijednosti</b> — vanjska, polaz, povrat, kompresor, kvarovi</li>
+          <li><b>Krivulja grijanja</b>, čitanje i upis — <span class="mono">158–173</span></li>
+          <li><b>SG-Ready i ograničenje snage</b> — <span class="mono">154–157 · 219 · 417–423</span></li>
+          <li><b>PTV</b> — temperatura, delta, sterilizacija <span class="mono">30 · 33 · 258–260</span></li>
+          <li><b>kWh potrošeno i proizvedeno</b> → COP <span class="mono">120–131 · 366–373</span></li>
+          <li>Serija jedinice <span class="mono">117</span> · 1=H … 5=M</li>
+        </ul>
+      </div>
+      <div class="col cld">
+        <h3>Samo oblak</h3><p class="cap">Panasonicovo · iznajmljeno</p>
+        <ul>
+          <li><b>Service Cloud</b> — 28 živih / 71 statistički parametar. Sučelje, <b>ne</b> API</li>
+          <li><b>Aquarea Home / Hub</b> <span class="mono">PCZESW737</span> — nema klijenta</li>
+          <li><b>tado° Sync</b> <span class="mono">PAWTHPOXE</span> — i otima vam upis</li>
+          <li><b>RAC / PACi</b> split jedinice</li>
+          <li>Službenog javnog API-ja <b>nema</b></li>
+          <li>Jedna sesija po računu — aplikacija izbacuje nadzornu ploču</li>
+        </ul>
+      </div>
+    </div>
+    <div class="fork">
+      <h3>Račva</h3>
+      <p><b>CN-CNT je port s jednim gospodarom, a svi ga žele.</b> HeishaMon, CZ-NSMB, Intesis i
+      CZ-TAW1B ulaze u istu utičnicu. Dva gospodara ne mogu dijeliti.</p>
+      <p>Pogađa svakog Gen-26 kupca prvi dan: <b>CZ-TAW1B dolazi uz L, M i EcoFleX</b>. Kompromis
+      (HeishaMon „Listen Only“) <b>ne radi na M seriji</b>. Dakle: oblak <i>ili</i> lokalni upis.</p>
+      <p><b>Osim</b> ako upravljačka kutija ima zaseban port za mrežni adapter. Nijedan primarni
+      dokument to ne potvrđuje. <b>To je najvrjednija nepoznanica u dokumentu.</b></p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="n">02</span><h2>Oprema</h2></div>
+    <div class="tw"><table>
+      <thead><tr><th>Dio</th><th>Što je</th><th>Za</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">CZ-NSMB</td><td>Modbus RTU pločica · objavljena mapa registara</td>
+          <td>M serija · Big A2W</td><td><span class="ok">Potvrđeno</span></td></tr>
+        <tr><td class="mono">CZ-NSMB-C</td><td>Modbus gateway u kućištu</td><td>sve serije <i>(tvrdnja)</i></td>
+          <td><span class="no">Nepotvrđeno</span></td></tr>
+        <tr><td class="mono">PAWAW-MBS-M</td><td>DIN Modbus gateway · <b>napajan preko CN-CNT</b></td>
+          <td>H nadalje</td><td><span class="no">Nepotvrđeno</span></td></tr>
+        <tr><td class="mono">INMBSPAN001A100</td><td>Intesis Modbus — rezerva kad CZ-NSMB ne pokriva model</td>
+          <td>H / J / K / L / M</td><td><span class="ok">Potvrđeno</span></td></tr>
+        <tr><td class="mono">CZ-TAW1B</td><td>WiFi adapter → oblak</td><td><b>uz L, M, EcoFleX</b></td>
+          <td><span class="ok">Potvrđeno</span></td></tr>
+        <tr><td class="mono">CZ-NS4P</td><td>Opcijska pločica — daje <i>drugi</i> CN-CNT</td><td>H / J</td>
+          <td><span class="ok">Potvrđeno</span></td></tr>
+      </tbody></table></div>
+    <div class="caveat"><b>Oprez.</b> CZ-NSMB pokriva M bi-blok i Big A2W — <b>ne R290 monoblok M, ne L
+      seriju</b>. Za Gen-26 R290 nema objavljenog slučaja ni za CZ-NSMB ni za HeishaMon. Izostanak
+      prijava kvara nije dokaz podrške.</div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="n">03</span><h2>Tri puta</h2></div>
+    <div class="tiers">
+      <div class="tier">
+        <div class="meta">Najbrže</div><div class="p">€40–60</div>
+        <p class="who">Vikend. Jedna kuća, gdje oblak ionako ne treba.</p>
+        <ul><li>HeishaMon ESP8266 + CN-CNT kabel</li><li>Mosquitto + Home Assistant</li>
+          <li>~144 čitanja, ~46 upisa</li><li>Pravila na uređaju rade bez WiFi-ja</li></ul>
+        <p class="cost">CZ-TAW1B ide s magistrale → Aquarea Home i Service Cloud se gase.</p>
+      </div>
+      <div class="tier pick">
+        <div class="meta">Preporuka</div><div class="p">€250–500</div>
+        <p class="who">Ovo bih gradio. Panasonicov dio, u Panasonicovom priručniku.</p>
+        <ul><li>CZ-NSMB — ili Intesis ako model nije na popisu</li><li>Oklopljena parica, 120 Ω</li>
+          <li><b>57600 8N2, ne 115200</b></li><li>HA + modbus + InfluxDB + Grafana</li>
+          <li>Tailscale · nikad port-forward</li></ul>
+        <p class="cost">Puni lokalni upis — i <i>vjerojatno</i> CZ-TAW1B ostaje živ.</p>
+      </div>
+      <div class="tier">
+        <div class="meta">Više lokacija</div><div class="p">Po lokaciji</div>
+        <p class="who">Nadzor flote. Do 63 jedinice po RS485 magistrali.</p>
+        <ul><li>CZ-NSMB / Intesis po lokaciji</li><li>RS485→Modbus-TCP gateway</li>
+          <li>Telegraf → InfluxDB → Grafana</li><li>Service Cloud ostaje za jamstvo</li></ul>
+        <p class="cost">Ne graditi flotu na reverse-engineered oblaku: jedna sesija, 429, blokade.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="n">04</span><h2>Rizici</h2></div>
+    <div class="tw"><table>
+      <thead><tr><th style="width:16%">Rizik</th><th>Stvarnost</th><th style="width:28%">Mjera</th></tr></thead>
+      <tbody>
+        <tr><td><b>Jamstvo</b></td>
+          <td>Panasonic nema službeni stav o trećim uređajima na CN-CNT. Tvrdnja da je HeishaMon
+            „pasivni prislušnik“ je <b>netočna</b> — u normalnom radu je aktivni gospodar magistrale.</td>
+          <td>Koristi <span class="mono">CZ-NSMB</span>. Panasonicov dio, u Panasonicovoj kutiji.</td></tr>
+        <tr><td><b>Dostupnost</b></td>
+          <td>Emulacija opcijske pločice traži <b>puls od 40 s</b>. Nestane li, dizalica javlja
+            <span class="mono">H74</span> i pada u pripravnost. Uz otvorene ESP32-S3 bugove — tiho
+            gašenje usred zime.</td>
+          <td>Ne uključuj emulaciju na nesigurnom hardveru. Alarmiraj na <b>starost podatka</b>.</td></tr>
+        <tr><td><b>Lomljivost</b></td>
+          <td>Oblak: ~1 prekidna promjena godišnje. Jedna velika HA integracija <b>arhivirana 03/2026</b>.
+            HeishaMon: <b>jedan</b> održavatelj.</td>
+          <td>Mape registara ne rotiraju ključeve. Oblak drži na rubu, nikad u putu upravljanja.</td></tr>
+        <tr><td><b>Dva gospodara</b></td><td>tado° Sync upisuje. I vi.</td>
+          <td>Jedan autoritet po zoni. Nikad oba.</td></tr>
+      </tbody></table></div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="n">05</span><h2>Prvo ovo</h2></div>
+    <div class="act">
+      <h3>Otvori upravljačku kutiju</h3>
+      <p>Sve se račva na jednom fizičkom pitanju koje se ne rješava za stolom: <b>koliko CN-CNT
+      portova jedinica stvarno ima?</b> Ako adapter ima svoj — dobivate lokalni upis <i>i</i> oblak.</p>
+      <ol>
+        <li><b>Fotografiraj svaki konektor.</b> Postoji li port za CZ-TAW1B <i>odvojen</i> od CN-CNT?</li>
+        <li><b>Zapiši točne oznake modela</b> — <span class="mono">WH-CME8</span> vs
+          <span class="mono">WH-CME5</span>. To odlučuje CZ-NSMB vs Intesis vs HeishaMon.</li>
+        <li><b>Provjeri opcijsku pločicu</b> <span class="mono">CZ-NS4P</span> — mijenja opcije ulančavanja.</li>
+        <li><b>Zabilježi verziju firmvera.</b></li>
+        <li><b>Traži živu ponudu za CZ-NSMB.</b> €150–400 je jedan izvor iz zajednice.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh"><span class="n">06</span><h2>Metoda</h2></div>
+    <div class="stats">
+      <div class="stat"><div class="v">33</div><div class="meta" style="margin-top:5px">agenta</div></div>
+      <div class="stat"><div class="v">869</div><div class="meta" style="margin-top:5px">poziva</div></div>
+      <div class="stat"><div class="v" style="color:var(--red)">16<span style="color:var(--ink3);font-size:15px">/24</span></div>
+        <div class="meta" style="margin-top:5px">oboreno</div></div>
+      <div class="stat"><div class="v">8</div><div class="meta" style="margin-top:5px">preživjelo</div></div>
+    </div>
+    <div class="caveat" style="border-left-color:var(--ink)">Svaka nosiva tvrdnja predana je nezavisnom
+      agentu čiji je zadatak bio <b style="color:var(--ink)">oboriti je</b> uz primarni izvor.
+      <b style="color:var(--ink)">Dvije trećine nisu preživjele</b> — zastarjela predaja s foruma,
+      preširoke tvrdnje, citati koji ne govore ono što im se pripisuje. Na stranici je samo ono što je
+      preživjelo.</div>
+    <div class="caveat"><b>Rupa koju ste tražili:</b> Reddit je bio <b>nedostupan</b> alatu — r/heatpumps,
+      r/homeassistant, r/HVAC i r/Panasonic nisu pretraženi. Ono što piše ovdje dolazi s Home Assistant
+      foruma, GitHub prijava i tweakers.net. <b>Reddit ostaje nepročitan.</b></div>
+  </section>
+
+  <footer>
+    <span>CZ-NSMB priručnik · Intesis INMBSPAN001A100 · HeishaMon #646 / #724 / #919 · HA forum</span>
+    <span style="color:var(--red)">Lokalno prvo</span>
+  </footer>
+</div>
+
+<script>
+const T=document.documentElement,th=document.getElementById("theme");
+const set=d=>{T.setAttribute("data-theme",d?"dark":"light");th.setAttribute("aria-checked",d);
+  document.querySelector('meta[name=theme-color]').setAttribute("content",d?"#0D0D0D":"#FFFFFF");};
+th.onclick=()=>set(T.getAttribute("data-theme")!=="dark");
+set(matchMedia("(prefers-color-scheme:dark)").matches);
+</script>

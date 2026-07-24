@@ -1,0 +1,909 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#FFFFFF">
+<title>Smart Solutions — Nadzor flote · Dubrovnik</title>
+<style>
+:root{
+  --red:#DD0426; --white:#FFFFFF; --night:#121212;
+  --red-d:#B00320; --red-soft:rgba(221,4,38,.08);
+  --ink:#121212; --ink2:#4F4F4F; --ink3:#6B6B6B; --ink4:#BDBDBD; --ink5:#E4E4E4;
+  --paper:#F7F7F6; --sunk:rgba(18,18,18,.05);
+  --glass:rgba(255,255,255,.58); --glass2:rgba(255,255,255,.72);
+  --line:rgba(18,18,18,.10); --line2:rgba(18,18,18,.18);
+  --mapbg:#121212; --mapland:#1E1E1E; --mapline:#2E2E2E;
+  --display:"Archivo Black","Arial Black","Helvetica Neue",-apple-system,BlinkMacSystemFont,
+            "Segoe UI",Roboto,system-ui,sans-serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono","Cascadia Mono",Consolas,monospace;
+  --sb:230px;
+  /* snappy: fast-out, no overshoot, no spring */
+  --snap:cubic-bezier(.2,0,0,1); --t:.14s;
+}
+:root[data-theme="dark"]{
+  --ink:#F4F4F4; --ink2:#B0B0B0; --ink3:#8C8C8C; --ink4:#4E4E4E; --ink5:#2C2C2C;
+  --paper:#0D0D0D; --sunk:rgba(255,255,255,.06);
+  --glass:rgba(255,255,255,.045); --glass2:rgba(255,255,255,.07);
+  --line:rgba(255,255,255,.11); --line2:rgba(255,255,255,.2);
+  --mapbg:#000000; --mapland:#161616; --mapline:#2A2A2A;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:var(--paper);min-height:100%}
+body{font-family:var(--sans);color:var(--ink);overflow-x:hidden;-webkit-font-smoothing:antialiased;
+     transition:background .18s linear,color .18s linear}
+button{font-family:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+::selection{background:var(--red);color:#fff}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:var(--line2);border-radius:0}
+::-webkit-scrollbar-track{background:transparent}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* something for the glass to refract */
+.wash{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(680px 460px at 88% -6%, rgba(221,4,38,.13), transparent 62%),
+             radial-gradient(560px 420px at 4% 104%, rgba(18,18,18,.10), transparent 60%)}
+:root[data-theme="dark"] .wash{
+  background:radial-gradient(680px 460px at 88% -6%, rgba(221,4,38,.20), transparent 62%),
+             radial-gradient(560px 420px at 4% 104%, rgba(255,255,255,.05), transparent 60%)}
+
+.shell{display:grid;grid-template-columns:var(--sb) 1fr;min-height:100vh;position:relative;z-index:1}
+
+/* ══ sidebar ══ */
+aside{padding:20px 13px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:22px;
+      background:var(--glass);backdrop-filter:blur(26px) saturate(190%);
+      -webkit-backdrop-filter:blur(26px) saturate(190%);border-right:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;padding:0 4px}
+.mark{width:34px;height:34px;flex:0 0 34px;color:var(--red);display:grid;place-items:center}
+.lg{width:100%;height:100%;display:block}
+/* wordmark is lowercase in the logo — do not uppercase it */
+.wm{display:flex;flex-direction:column;line-height:.92}
+.wm b{font-family:var(--display);font-weight:900;font-size:14px;letter-spacing:-.045em;
+      text-transform:lowercase;color:var(--red)}
+nav{display:flex;flex-direction:column;gap:1px}
+/* the edge-removal move: radius snaps away, a red rail cuts in. No translate. */
+.nl{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;font-size:13px;
+    font-weight:700;color:var(--ink2);text-align:left;width:100%;position:relative;overflow:hidden;
+    transition:border-radius var(--t) var(--snap),background var(--t) linear,color var(--t) linear}
+.nl::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--red);
+            transform:scaleY(0);transform-origin:top;transition:transform var(--t) var(--snap)}
+.nl:hover{border-radius:0;background:var(--sunk);color:var(--ink)}
+.nl:hover::before{transform:scaleY(1)}
+.nl.on{border-radius:0;background:var(--night);color:#fff}
+:root[data-theme="dark"] .nl.on{background:var(--red)}
+.nl.on::before{transform:scaleY(1)}
+:root[data-theme="dark"] .nl.on::before{background:#fff}
+.nl.on .ic{color:var(--red)}
+:root[data-theme="dark"] .nl.on .ic{color:#fff}
+.nl .ic{width:16px;height:16px;flex:0 0 16px;color:var(--ink3);transition:color var(--t) linear}
+.nl .bdg{margin-left:auto;font-size:10px;font-weight:800;padding:1px 6px;background:var(--red);
+         color:#fff;font-variant-numeric:tabular-nums}
+.foot{margin-top:auto;display:flex;flex-direction:column;gap:10px}
+
+/* theme slider — red lives beneath the knob */
+.theme{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:9px;width:100%;
+       transition:border-radius var(--t) var(--snap),background var(--t) linear}
+.theme:hover{border-radius:0;background:var(--sunk)}
+.tr{width:44px;height:24px;flex:0 0 44px;border-radius:13px;background:var(--red);position:relative;
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.tr i{position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;
+      transition:transform .16s var(--snap),background .16s linear}
+:root[data-theme="dark"] .tr i{transform:translateX(20px);background:var(--night)}
+.theme .lbl{font-size:9.5px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;
+            color:var(--ink3)}
+.acct{display:flex;align-items:center;gap:9px;padding:8px;border-radius:9px;background:var(--sunk);
+      transition:border-radius var(--t) var(--snap)}
+.acct:hover{border-radius:0}
+.av{width:28px;height:28px;flex:0 0 28px;background:var(--night);color:#fff;display:grid;place-items:center;
+    font-family:var(--display);font-weight:900;font-size:11px}
+:root[data-theme="dark"] .av{background:var(--red)}
+.acct b{font-size:12px;font-weight:800;display:block;line-height:1.15}
+.acct span{font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3)}
+.lcl{display:inline-flex;align-items:center;gap:6px;font-size:9px;color:var(--ink3);font-weight:800;
+     letter-spacing:.11em;text-transform:uppercase;padding:0 4px}
+.lcl i{width:5px;height:5px;background:var(--red);animation:bl 1.6s steps(1,end) infinite}
+@keyframes bl{0%,50%{opacity:1}51%,100%{opacity:.25}}
+
+main{min-width:0;display:flex;flex-direction:column}
+.top{position:sticky;top:0;z-index:30;background:var(--glass2);backdrop-filter:blur(26px) saturate(190%);
+     -webkit-backdrop-filter:blur(26px) saturate(190%);border-bottom:1px solid var(--line);
+     padding:13px 26px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.top h1{font-family:var(--display);font-weight:900;font-size:18px;text-transform:uppercase;
+        letter-spacing:-.035em;margin:0;line-height:1}
+.meta{font-size:9px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--ink3)}
+.top .sub{margin-top:4px}
+.demo{font-size:8.5px;font-weight:900;letter-spacing:.12em;color:#fff;background:var(--red);
+      padding:3px 7px;text-transform:uppercase}
+.counts{display:flex;gap:5px;margin-left:auto;flex-wrap:wrap}
+.cnt{display:flex;align-items:center;gap:7px;background:var(--glass);
+     backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:8px;padding:7px 11px;
+     font-size:10px;font-weight:800;color:var(--ink2);letter-spacing:.08em;text-transform:uppercase;
+     transition:border-radius var(--t) var(--snap),border-color var(--t) linear,color var(--t) linear}
+.cnt:hover{border-radius:0;border-color:var(--line2);color:var(--ink)}
+.cnt.on{border-radius:0;border-color:var(--red);color:var(--ink)}
+.cnt b{font-variant-numeric:tabular-nums;font-weight:900;color:var(--ink);font-size:12px}
+
+.mk{width:8px;height:8px;flex:0 0 8px;border-radius:50%}
+.mk.ok{background:var(--ink5);box-shadow:inset 0 0 0 1px var(--ink4)}
+.mk.warn{background:transparent;box-shadow:inset 0 0 0 2px var(--red)}
+.mk.crit{background:var(--red)}
+.mk.stale{background:repeating-linear-gradient(45deg,var(--ink),var(--ink) 2px,transparent 2px,transparent 4px);
+          box-shadow:inset 0 0 0 1px var(--ink)}
+.mk.off{background:transparent;box-shadow:inset 0 0 0 1.5px var(--ink4)}
+
+.scroller{flex:1}
+.pad{padding:22px 26px 90px;max-width:1660px;margin:0 auto}
+.r3d{transition:opacity .34s var(--snap),transform .34s var(--snap)}
+.r3d.pre{opacity:0;transform:translateY(14px)}
+
+/* ══ glass panels — NO hover transform anywhere ══ */
+.panel{background:var(--glass);backdrop-filter:blur(24px) saturate(190%);
+       -webkit-backdrop-filter:blur(24px) saturate(190%);border:1px solid var(--line);
+       border-radius:14px;overflow:hidden;transition:border-radius var(--t) var(--snap)}
+.panel.night{background:var(--night);border-color:transparent;color:#fff}
+.panel.night .meta{color:rgba(255,255,255,.45)}
+.ph{padding:14px 16px 11px;display:flex;align-items:center;gap:10px}
+.ph h2{font-family:var(--display);font-weight:900;font-size:12.5px;text-transform:uppercase;
+       letter-spacing:-.02em;margin:0}
+.seg{display:flex;background:var(--sunk);border-radius:7px;padding:2px;margin-left:auto}
+.panel.night .seg{background:rgba(255,255,255,.1)}
+.seg button{padding:7px 13px;min-height:26px;font-size:9.5px;font-weight:900;border-radius:5px;
+            color:var(--ink3);letter-spacing:.1em;text-transform:uppercase;
+            transition:border-radius var(--t) var(--snap),background var(--t) linear,color var(--t) linear}
+.seg button:hover{border-radius:0;color:var(--ink)}
+.seg button.on{border-radius:0;background:var(--night);color:#fff}
+.panel.night .seg button{color:rgba(255,255,255,.5)}
+.panel.night .seg button.on{background:var(--red);color:#fff}
+:root[data-theme="dark"] .seg button.on{background:var(--red)}
+
+/* ══ kpi ══ */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-bottom:11px}
+@media(max-width:1040px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--glass);backdrop-filter:blur(24px) saturate(190%);
+     -webkit-backdrop-filter:blur(24px) saturate(190%);border:1px solid var(--line);
+     border-radius:12px;padding:15px 16px 13px;position:relative;overflow:hidden;
+     transition:border-radius var(--t) var(--snap),border-color var(--t) linear}
+.kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--red);
+             transform:scaleY(0);transform-origin:top;transition:transform var(--t) var(--snap)}
+.kpi:hover{border-radius:0;border-color:var(--line2)}
+.kpi:hover::before{transform:scaleY(1)}
+.kpi.alarm{background:var(--red);border-color:transparent;color:#fff}
+.kpi.alarm .meta{color:rgba(255,255,255,.65)}
+.kpi.alarm::before{background:#fff}
+.kpi .v{font-family:var(--display);font-weight:900;font-size:38px;letter-spacing:-.05em;margin-top:6px;
+        line-height:.9;font-variant-numeric:tabular-nums}
+.kpi.alarm .v{color:#fff}
+.spark{height:20px;margin-top:8px;display:block;width:100%}
+.px{display:flex;gap:2px;margin-top:9px}
+.px i{height:6px;flex:1}
+/* live tick: colour flash only, no motion */
+@keyframes lit{0%{color:var(--red)}100%{}}
+.lit{animation:lit .5s linear}
+
+/* ══ map ══ */
+.mapbox{position:relative;aspect-ratio:1/.8;background:var(--mapbg)}
+svg.map{display:block;width:100%;height:100%}
+.pin{cursor:pointer}
+.pin .hit{fill:transparent}
+.pin .ring{fill:none;stroke-width:1.6;transition:stroke-width .12s linear}
+.pin:hover .ring{stroke-width:4}
+.pin:focus{outline:none}
+.pin:focus-visible .ring{stroke:#fff;stroke-width:4}
+.pulse{transform-box:fill-box;transform-origin:center;animation:ping 1.8s linear infinite}
+@keyframes ping{0%{transform:scale(.6);opacity:.6}100%{transform:scale(2.6);opacity:0}}
+.maplbl{font-size:7.5px;fill:rgba(255,255,255,.4);font-weight:800;letter-spacing:.16em;
+        text-transform:uppercase;pointer-events:none;font-family:var(--sans)}
+
+/* ══ rows ══ */
+.rows{max-height:560px;overflow-y:auto}
+.row{display:flex;align-items:center;gap:11px;padding:11px 16px;width:100%;text-align:left;
+     position:relative;overflow:hidden;transition:background var(--t) linear}
+.row+.row{box-shadow:inset 0 1px 0 var(--line)}
+.row::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--red);
+             transform:scaleY(0);transform-origin:center;transition:transform var(--t) var(--snap)}
+.row:hover{background:var(--sunk)}
+.row:hover::before{transform:scaleY(1)}
+.row.sel{background:var(--red-soft)}
+.row.sel::before{transform:scaleY(1)}
+.row .b{flex:1;min-width:0}
+.row .n{font-size:12.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .a{font-size:9px;color:var(--ink3);margin-top:2px;letter-spacing:.08em;text-transform:uppercase;
+        font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .rt{text-align:right;flex:0 0 auto}
+.row .big{font-family:var(--display);font-weight:900;font-size:14px;letter-spacing:-.04em;
+          font-variant-numeric:tabular-nums;display:block}
+.row .ag{font-size:8.5px;color:var(--ink3);letter-spacing:.09em;text-transform:uppercase}
+.tag{font-size:7.5px;font-weight:900;letter-spacing:.09em;padding:2px 4px;background:var(--red);color:#fff}
+
+/* ══ building ══ */
+.hero{display:grid;grid-template-columns:1.5fr 1fr;gap:11px;margin-bottom:11px}
+.bwrap{display:grid;grid-template-columns:1fr 1.1fr;gap:11px}
+@media(max-width:1180px){.bwrap{grid-template-columns:1fr}}
+@media(max-width:900px){.hero{grid-template-columns:1fr}.mapbox{aspect-ratio:44/47}}
+.bld{padding:16px}
+.roof{background:var(--night);padding:12px;color:#fff}
+:root[data-theme="dark"] .roof{background:rgba(255,255,255,.06);border:1px solid var(--line)}
+.rh{font-size:9px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;display:flex;
+    justify-content:space-between;color:rgba(255,255,255,.45)}
+:root[data-theme="dark"] .rh{color:var(--ink3)}
+.rh b{color:#fff}
+:root[data-theme="dark"] .rh b{color:var(--ink)}
+.casc{display:flex;gap:4px;margin-top:10px}
+.hp{flex:1;padding:8px 3px;text-align:center;background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.12);transition:border-color .12s linear}
+:root[data-theme="dark"] .hp{background:rgba(255,255,255,.05);border-color:var(--line)}
+.hp:hover{border-color:var(--red)}
+.hp .id{font-size:7.5px;color:rgba(255,255,255,.42);font-weight:900;letter-spacing:.1em}
+:root[data-theme="dark"] .hp .id{color:var(--ink3)}
+.hp .hz{font-family:var(--display);font-weight:900;font-size:12px;margin-top:3px;letter-spacing:-.02em;
+        color:#fff;font-variant-numeric:tabular-nums}
+:root[data-theme="dark"] .hp .hz{color:var(--ink)}
+.hp.idle .hz{color:rgba(255,255,255,.28)}
+.hp.err{background:var(--red);border-color:transparent}
+.hp.err .hz,.hp.err .id{color:#fff}
+.floor{display:flex;align-items:center;gap:10px;background:var(--glass2);border:1px solid var(--line);
+       padding:8px 11px;margin-top:3px;position:relative;overflow:hidden;
+       transition:border-color var(--t) linear}
+.floor::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--red);
+               transform:scaleY(0);transition:transform var(--t) var(--snap)}
+.floor:hover{border-color:var(--line2)}
+.floor:hover::before{transform:scaleY(1)}
+.floor.hot{border-color:var(--red)}
+.floor .fn{font-family:var(--mono);font-size:9.5px;color:var(--ink3);width:19px;font-weight:700}
+.floor .fbar{flex:1;height:3px;background:var(--sunk);overflow:hidden}
+.bar-i{display:block;height:100%}
+.floor .ft{font-family:var(--display);font-weight:900;font-size:11.5px;width:42px;text-align:right;
+           letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.floor .fz{font-size:8px;color:var(--ink3);width:22px;text-align:right;letter-spacing:.09em;font-weight:800}
+.base{background:var(--sunk);padding:10px 11px;margin-top:3px;display:flex;justify-content:space-between;
+      font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:800;color:var(--ink2)}
+
+/* ══ tabs / tiles ══ */
+.tabs{display:flex;gap:2px;background:var(--sunk);border-radius:8px;padding:2px;margin:0 0 13px}
+.tabs button{flex:1;padding:9px;font-size:9.5px;font-weight:900;border-radius:6px;color:var(--ink3);
+             letter-spacing:.11em;text-transform:uppercase;
+             transition:border-radius var(--t) var(--snap),background var(--t) linear,color var(--t) linear}
+.tabs button:hover{border-radius:0;color:var(--ink)}
+.tabs button.on{border-radius:0;background:var(--night);color:#fff}
+:root[data-theme="dark"] .tabs button.on{background:var(--red)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
+.tile{background:var(--glass2);border:1px solid var(--line);border-radius:10px;padding:11px;
+      position:relative;overflow:hidden;
+      transition:border-radius var(--t) var(--snap),border-color var(--t) linear}
+.tile::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--red);
+              transform:scaleY(0);transition:transform var(--t) var(--snap)}
+.tile:hover{border-radius:0;border-color:var(--line2)}
+.tile:hover::before{transform:scaleY(1)}
+.tile .k{display:flex;justify-content:space-between;gap:4px;align-items:baseline}
+.tile .v{font-family:var(--display);font-weight:900;font-size:22px;letter-spacing:-.045em;margin-top:5px;
+         font-variant-numeric:tabular-nums;line-height:1}
+.tile .u{font-size:10.5px;color:var(--ink3);font-weight:800}
+.tile .reg{font-size:8px;color:var(--ink3);margin-top:5px;letter-spacing:.1em;font-family:var(--mono)}
+.tile.stale{border-color:var(--ink);
+  background:repeating-linear-gradient(45deg,var(--glass2),var(--glass2) 5px,var(--sunk) 5px,var(--sunk) 10px)}
+.tile.stale .v{text-decoration:line-through;color:var(--ink3)}
+.tile.alarm{background:var(--red);border-color:transparent}
+.tile.alarm .v{color:#fff}.tile.alarm .k span,.tile.alarm .reg{color:rgba(255,255,255,.7)}
+.age{font-size:8px;color:var(--ink3);letter-spacing:.08em}
+h3.sec{font-size:9px;color:var(--ink3);font-weight:900;letter-spacing:.16em;text-transform:uppercase;
+       margin:18px 0 8px}
+
+/* ══ alarms ══ */
+.al{background:var(--glass2);border:1px solid var(--line);border-radius:11px;padding:13px;margin-bottom:8px;
+    position:relative;overflow:hidden;
+    transition:border-radius var(--t) var(--snap),border-color var(--t) linear}
+.al:hover{border-radius:0;border-color:var(--line2)}
+.al::after{content:"";position:absolute;left:0;top:0;bottom:0;width:4px}
+.al.sev-crit::after{background:var(--red)}
+.al.sev-major::after{background:repeating-linear-gradient(180deg,var(--red),var(--red) 4px,transparent 4px,transparent 8px)}
+.al.sev-stale::after{background:repeating-linear-gradient(180deg,var(--ink),var(--ink) 3px,transparent 3px,transparent 6px)}
+.al .code{font-family:var(--display);font-weight:900;font-size:16px;letter-spacing:-.035em;
+          display:flex;align-items:baseline;gap:7px}
+.al .code em{font-style:normal;font-size:9px;color:var(--ink3);font-family:var(--mono);font-weight:400;
+             letter-spacing:.06em}
+.al .desc{font-size:12px;color:var(--ink2);margin-top:3px;line-height:1.45}
+.al .desc i{font-style:normal;color:var(--ink3)}
+.al .m{margin-top:7px}
+.pills{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap}
+.pill{font-size:8px;font-weight:900;padding:3px 6px;letter-spacing:.1em;text-transform:uppercase}
+.p-act{background:var(--red);color:#fff}
+.p-un{background:var(--night);color:#fff}
+:root[data-theme="dark"] .p-un{background:var(--ink5);color:var(--ink)}
+.p-ak{background:var(--sunk);color:var(--ink2)}
+.p-rt{background:transparent;color:var(--ink2);box-shadow:inset 0 0 0 1px var(--ink4)}
+.acts{display:flex;gap:5px;margin-top:10px}
+.acts button{flex:1;background:var(--sunk);border-radius:7px;padding:9px 4px;font-size:9.5px;
+             font-weight:900;color:var(--ink2);letter-spacing:.1em;text-transform:uppercase;
+             transition:border-radius var(--t) var(--snap),background var(--t) linear,color var(--t) linear}
+.acts button:hover{border-radius:0;background:var(--ink5);color:var(--ink)}
+.acts button.pri{background:var(--red);color:#fff}
+.acts button.pri:hover{border-radius:0;background:var(--red-d);color:#fff}
+.acts button:disabled{opacity:.3;cursor:default}
+.health{background:var(--glass2);border:1px solid var(--line);border-radius:11px;padding:12px 15px;
+        display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.health.bad{background:var(--red);border-color:transparent;color:#fff}
+.health.bad .meta{color:rgba(255,255,255,.65)}
+.health b{font-family:var(--display);font-weight:900;font-size:18px;letter-spacing:-.04em}
+
+/* ══ ctrl ══ */
+.ctl{background:var(--glass2);border:1px solid var(--line);border-radius:11px;padding:14px;margin-bottom:8px;
+     transition:border-radius var(--t) var(--snap)}
+.ctl:hover{border-radius:0}
+.ch{display:flex;justify-content:space-between;align-items:baseline}
+.stp{display:flex;align-items:center;gap:12px;margin-top:11px}
+.stp button{width:44px;height:44px;border-radius:11px;background:var(--sunk);font-size:19px;font-weight:300;
+            display:grid;place-items:center;
+            transition:border-radius var(--t) var(--snap),background var(--t) linear,color var(--t) linear}
+.stp button:hover{border-radius:0;background:var(--red);color:#fff}
+.stp .val{flex:1;text-align:center;font-family:var(--display);font-weight:900;font-size:32px;
+          letter-spacing:-.055em;font-variant-numeric:tabular-nums}
+.note{background:var(--sunk);border-left:3px solid var(--ink);padding:10px 11px;font-size:11px;
+      color:var(--ink2);line-height:1.5;margin-top:10px}
+.note.red{background:var(--red-soft);border-left-color:var(--red);color:var(--red-d)}
+:root[data-theme="dark"] .note.red{color:#FF6B7E}
+.note b{color:var(--ink)}
+:root[data-theme="dark"] .note.red b{color:#FF8A99}
+.sw{width:44px;height:26px;padding:0;border-radius:14px;background:var(--red);position:relative;
+    flex:0 0 44px;cursor:pointer}
+.sw i{position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;background:#fff;
+      transition:transform .16s var(--snap)}
+.sw.on i{transform:translateX(18px)}
+.idst{background:var(--glass2);border:1px solid var(--line);border-radius:11px;padding:13px;
+      display:flex;flex-direction:column;gap:8px}
+.idst div{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.idst span:last-child{font-family:var(--mono);text-align:right;font-size:10.5px;color:var(--ink)}
+
+/* ══ drawer ══ */
+.scrim{position:fixed;inset:0;background:rgba(18,18,18,.4);opacity:0;pointer-events:none;
+       transition:opacity .18s linear;z-index:50;backdrop-filter:blur(3px)}
+.scrim.on{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;height:100vh;width:min(520px,94vw);z-index:60;
+        background:var(--glass2);backdrop-filter:blur(30px) saturate(190%);
+        -webkit-backdrop-filter:blur(30px) saturate(190%);border-left:1px solid var(--line2);
+        transform:translateX(102%);visibility:hidden;overflow-y:auto;
+        transition:transform .22s var(--snap),visibility 0s linear .22s}
+.drawer.on{transform:none;visibility:visible;transition:transform .22s var(--snap)}
+.dh{padding:16px 20px;position:sticky;top:0;z-index:2;background:var(--glass2);
+    backdrop-filter:blur(30px);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px}
+.dh h2{font-family:var(--display);font-weight:900;font-size:16px;text-transform:uppercase;
+       letter-spacing:-.035em;margin:0;flex:1;line-height:1}
+.x{width:30px;height:30px;border-radius:50%;background:var(--sunk);color:var(--ink2);display:grid;
+   place-items:center;font-size:12px;transition:border-radius var(--t) var(--snap),background var(--t) linear,
+   color var(--t) linear}
+.x:hover{border-radius:0;background:var(--red);color:#fff}
+.db{padding:16px 20px 60px}
+.burger{display:none;width:34px;height:34px;border-radius:8px;background:var(--sunk);place-items:center}
+@media(max-width:900px){
+  .shell{grid-template-columns:1fr}
+  aside{position:fixed;left:0;top:0;z-index:70;transform:translateX(-102%);visibility:hidden;
+        transition:transform .22s var(--snap),visibility 0s linear .22s;width:var(--sb)}
+  aside.on{transform:none;visibility:visible;transition:transform .22s var(--snap)}
+  .burger{display:grid}
+  .drawer{width:100vw}
+  .pad{padding:14px}
+  .top{padding:12px 14px}
+}
+
+/* ══ chat ══ */
+.chat{display:flex;flex-direction:column;gap:9px;padding:2px 0 12px;min-height:150px}
+.msg{max-width:88%;padding:10px 13px;border-radius:12px;font-size:13px;line-height:1.5}
+.msg.u{align-self:flex-end;background:var(--red);color:#fff;border-bottom-right-radius:2px}
+.msg.a{align-self:flex-start;background:var(--sunk);border-bottom-left-radius:2px}
+.msg.a b{color:var(--red)}
+.msg .src{font-size:8.5px;color:var(--ink3);margin-top:6px;border-top:1px solid var(--line);
+          padding-top:5px;font-family:var(--mono)}
+.qs{display:flex;gap:5px;overflow-x:auto;padding:8px 0}
+.qs button{flex:0 0 auto;background:var(--glass2);border:1px solid var(--line);border-radius:99px;
+           padding:7px 12px;font-size:11px;color:var(--ink2);font-weight:700;
+           transition:border-radius var(--t) var(--snap),border-color var(--t) linear,color var(--t) linear}
+.qs button:hover{border-radius:0;border-color:var(--red);color:var(--red)}
+.ask{display:flex;gap:8px;padding-top:9px;position:sticky;bottom:0;background:var(--glass2);
+     backdrop-filter:blur(20px);padding-bottom:6px;border-top:1px solid var(--line)}
+.ask input{flex:1;background:var(--sunk);border:1px solid transparent;border-radius:99px;padding:10px 15px;
+           color:var(--ink);font-size:14px;font-family:inherit;outline:none;min-width:0;
+           transition:border-color .12s linear,border-radius var(--t) var(--snap)}
+.ask input:focus{border-color:var(--red);border-radius:8px}
+.ask button{width:40px;height:40px;border-radius:50%;flex:0 0 40px;color:#fff;display:grid;
+            place-items:center;font-weight:900;background:var(--red);
+            transition:border-radius var(--t) var(--snap)}
+.ask button:hover{border-radius:0}
+</style>
+
+<div class="wash"></div>
+<div class="shell">
+  <aside id="aside">
+    <div class="brand">
+      <div class="mark"><svg class="lg" viewBox="0 0 100 100" fill="none" aria-hidden="true"><g transform="rotate(45 50 50)"><rect x="17" y="17" width="66" height="66" stroke="currentColor" stroke-width="9"/><rect x="33" y="30" width="9" height="40" fill="currentColor"/><rect x="46" y="30" width="9" height="40" fill="currentColor"/><rect x="59" y="30" width="9" height="40" fill="currentColor"/></g></svg></div>
+      <div class="wm"><b>smart</b><b>solutions</b></div>
+    </div>
+    <nav id="nav"></nav>
+    <div class="foot">
+      <span class="lcl"><i></i>Lokalno · uživo</span>
+      <button class="theme" id="theme" role="switch" aria-checked="false" aria-label="Tamni način">
+        <span class="tr"><i></i></span><span class="lbl" id="themeLbl">Svijetlo</span>
+      </button>
+      <div class="acct"><div class="av">V</div><div><b>Vido</b><span>Voditelj servisa</span></div></div>
+    </div>
+  </aside>
+  <main>
+    <div class="top">
+      <button class="burger" id="burger"><svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+      <div><h1 id="pgT">Nadzor</h1><div class="sub meta" id="pgS">10 lokacija</div></div>
+      <span class="demo">Demo</span>
+      <div class="counts" id="counts"></div>
+    </div>
+    <div class="scroller" id="scroller"><div class="pad" id="page"></div></div>
+  </main>
+</div>
+<div class="scrim" id="scrim"></div>
+<div class="drawer" id="drawer">
+  <div class="dh"><h2 id="dT">—</h2><button class="x" id="dX">✕</button></div>
+  <div class="db" id="dB"></div>
+</div>
+
+<script>
+const FAULTS={
+ 162:{c:"H62",t:"Sklopka protoka vode",k:"H",s:"major",note:"Filtar, zračni čep ili tlak ispod 1,0 bar."},
+ 174:{c:"H74",t:"Komunikacija s PCB-om",k:"H",s:"major",note:"U povijesti, ne na uređaju."},
+ 190:{c:"H90",t:"Komunikacija vanjske i unutarnje jedinice",k:"H",s:"major"},
+ 212:{c:"F12",t:"Tlačna sklopka",k:"F",s:"crit",retry:[2,4,20]},
+ 216:{c:"F16",t:"Zaštita radne struje",k:"F",s:"crit",retry:[1,3,20]},
+ 295:{c:"F95",t:"Visoki tlak u hlađenju",k:"F",s:"crit",note:"Zaprljan izmjenjivač."},
+};
+const SEVW={crit:0,major:1,warn:2,minor:3,stale:4,off:5,ok:6};
+const SITES=[
+ {id:"MOK",n:"Toranj Mokošica A",ad:"Nova Mokošica 14",d:"Nova Mokošica",x:371,y:86,hero:true,
+  st:"warn",out:8.4,cop:3.42,age:24,model:"WH-WXG30ME8 ×5",gw:"CZ-NSMB ×5 · CME10",rssi:-61,
+  ser:"A2W-MOK-0417",al:[162,174],hz:58,ol:46.2,il:41.8,pr:1.42},
+ {id:"GRZ1",n:"Lučka uprava Gruž",ad:"Obala Stjepana Radića 47",d:"Gruž",x:214,y:250,
+  st:"ok",out:9.1,cop:3.88,age:12,model:"WH-WXG25ME8 ×2",gw:"CZ-NSMB ×2",rssi:-58,ser:"A2W-GRZ-1120",
+  al:[],hz:44,ol:44.1,il:40.2,pr:1.55},
+ {id:"GRZ2",n:"Poslovnica Vukovarska",ad:"Vukovarska 62",d:"Gruž",x:232,y:272,
+  st:"crit",out:9.0,cop:2.11,age:8,model:"WH-WXG20ME8 ×3",gw:"CZ-NSMB ×3",rssi:-72,ser:"A2W-GRZ-2088",
+  al:[295,216],hz:0,ol:38.4,il:36.9,pr:1.18},
+ {id:"LAP1",n:"Hotel Stepinac",ad:"Kardinala Stepinca 34",d:"Lapad",x:179,y:291,
+  st:"ok",out:9.6,cop:4.02,age:19,model:"WH-WXG30ME8 ×4",gw:"CZ-NSMB ×4",rssi:-54,ser:"A2W-LAP-0912",
+  al:[],hz:51,ol:45.0,il:41.1,pr:1.61},
+ {id:"LAP2",n:"Zvonimir Seafront",ad:"Šetalište Kralja Zvonimira 18",d:"Lapad",x:160,y:316,
+  st:"stale",out:null,cop:null,age:2280,model:"WH-WXG25ME8 ×3",gw:"CZ-NSMB ×3",rssi:null,
+  ser:"A2W-LAP-1533",al:[],hz:null,ol:null,il:null,pr:null},
+ {id:"BAB",n:"Resort Babin Kuk",ad:"Od Babina Kuka 11",d:"Babin Kuk",x:84,y:339,
+  st:"ok",out:9.8,cop:3.71,age:31,model:"WH-WXG30ME8 ×6",gw:"CZ-NSMB ×6",rssi:-66,ser:"A2W-BAB-0301",
+  al:[],hz:62,ol:47.3,il:42.6,pr:1.48},
+ {id:"MON",n:"Iva Vojnovića 41",ad:"Iva Vojnovića 41",d:"Montovjerna",x:271,y:349,
+  st:"warn",out:8.9,cop:3.05,age:41,model:"WH-WXG20ME8 ×2",gw:"P-Smart Edge",rssi:-77,ser:"A2W-MON-0654",
+  al:[190],hz:39,ol:43.2,il:39.8,pr:1.33},
+ {id:"PLO",n:"Frana Supila 22",ad:"Frana Supila 22",d:"Ploče",x:414,y:412,
+  st:"ok",out:9.3,cop:4.31,age:15,model:"WH-SDC0916M3E5",gw:"CZ-NSMB",rssi:-49,ser:"A2W-PLO-0188",
+  al:[],hz:36,ol:42.0,il:38.5,pr:1.52},
+ {id:"OLD",n:"Pansion Pile",ad:"Pile 6",d:"Grad",x:381,y:433,
+  st:"off",out:null,cop:null,age:9120,model:"WH-SDC0916M6E5",gw:"CZ-NSMB",rssi:null,ser:"A2W-OLD-0072",
+  al:[],hz:null,ol:null,il:null,pr:null},
+ {id:"KOM",n:"ACI Komolac",ad:"Komolac bb",d:"Komolac",x:452,y:130,
+  st:"ok",out:7.9,cop:3.55,age:22,model:"WH-WXG25ME8 ×2",gw:"CZ-NSMB ×2",rssi:-63,ser:"A2W-KOM-0455",
+  al:[],hz:47,ol:45.8,il:41.9,pr:1.44},
+];
+const STC={ok:{l:"Ispravno"},warn:{l:"Upozorenje"},crit:{l:"Kvar"},stale:{l:"Bez signala"},
+           off:{l:"Nije povezano"}};
+const PINC={ok:"rgba(255,255,255,.42)",warn:"#DD0426",crit:"#DD0426",stale:"rgba(255,255,255,.75)",
+            off:"rgba(255,255,255,.55)"};
+const FLOORS=[...Array(10)].map((_,i)=>{const f=10-i;
+  const t=+(21.4+Math.sin(f*1.7)*.9+(f>7?.7:0)).toFixed(1);
+  return{f,t,z:f===9?"Z2":"Z1",hot:t>=22.8};});
+const ICON={dash:'<path d="M3 13h8V3H3zM13 21h8V11h-8zM13 3v6h8V3zM3 21h8v-6H3z"/>',
+ alarm:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/>',
+ energy:'<path d="M13 2 3 14h9l-1 8 10-12h-9z"/>',
+ bld:'<path d="M3 21h18M6 21V8l6-5 6 5v13M10 21v-5h4v5"/>',
+ ai:'<path d="M12 3a9 9 0 1 1-4.2 17L3 21l1.1-4.6A9 9 0 0 1 12 3z"/>'};
+let filter=null,view="map",sel=null,page="dash",tab="stanje";
+const ACKED=new Set();
+const $=id=>document.getElementById(id);
+const hr=(n,d=1)=>n.toFixed(d).replace(".",",");
+const fmtAge=s=>s<60?s+" s":s<3600?Math.floor(s/60)+" min":Math.floor(s/3600)+" h";
+const nAl=()=>SITES.reduce((a,s)=>a+s.al.length,0)+1;
+const fleetCop=()=>{const v=SITES.filter(s=>s.cop);return v.reduce((a,s)=>a+s.cop,0)/v.length;};
+
+/* ══ theme ══ */
+const theme=$("theme");
+function setTheme(d){document.documentElement.setAttribute("data-theme",d?"dark":"light");
+  theme.setAttribute("aria-checked",d);$("themeLbl").textContent=d?"Tamno":"Svijetlo";
+  document.querySelector('meta[name=theme-color]').setAttribute("content",d?"#0D0D0D":"#FFFFFF");}
+theme.onclick=()=>setTheme(document.documentElement.getAttribute("data-theme")!=="dark");
+setTheme(matchMedia("(prefers-color-scheme:dark)").matches);
+
+function drawNav(){
+  const it=[["dash","Nadzor","dash"],["alarms","Alarmi","alarm",nAl()],["energy","Energija","energy"],
+            ["bld","Zgrada","bld"],["ai","Asistent","ai"]];
+  $("nav").innerHTML=it.map(([k,l,i,b])=>`<button class="nl ${page===k?'on':''}" data-p="${k}">
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round">${ICON[i]}</svg>${l}
+    ${b?`<span class="bdg">${b}</span>`:""}</button>`).join("");
+  document.querySelectorAll(".nl").forEach(b=>b.onclick=()=>{
+    page=b.dataset.p;$("aside").classList.remove("on");
+    if(page==="ai"){openAI();page="dash";}drawNav();route();});
+}
+function drawCounts(){
+  const c={ok:0,warn:0,crit:0,stale:0,off:0};SITES.forEach(s=>c[s.st]++);
+  $("counts").innerHTML=Object.entries(c).filter(([,v])=>v).map(([k,v])=>
+    `<button class="cnt ${filter===k?'on':''}" data-f="${k}"><span class="mk ${k}"></span>
+      <b>${v}</b> · ${STC[k].l}</button>`).join("");
+  document.querySelectorAll(".cnt").forEach(b=>b.onclick=()=>{
+    filter=filter===b.dataset.f?null:b.dataset.f;route();});
+}
+function mapSVG(){
+  const pins=SITES.map(s=>{const c=PINC[s.st];
+    const ping=s.st==="crit"?`<circle class="pulse" cx="${s.x}" cy="${s.y}" r="7" fill="none" stroke="${c}" stroke-width="1.2"/>`:"";
+    const dim=(filter&&s.st!==filter)?.14:1;
+    const core=s.st==="warn"?`<circle cx="${s.x}" cy="${s.y}" r="3.4" fill="none" stroke="${c}" stroke-width="2"/>`
+      :s.st==="off"?`<circle cx="${s.x}" cy="${s.y}" r="3.2" fill="none" stroke="${c}" stroke-width="1.4"/>`
+      :s.st==="stale"?`<circle cx="${s.x}" cy="${s.y}" r="3.6" fill="none" stroke="${c}" stroke-width="1.6" stroke-dasharray="1.8 1.6"/><line x1="${s.x-4.6}" y1="${s.y+4.6}" x2="${s.x+4.6}" y2="${s.y-4.6}" stroke="${c}" stroke-width="1.4"/>`
+      :`<circle cx="${s.x}" cy="${s.y}" r="3.6" fill="${c}"/>`;
+    return `<g class="pin" data-id="${s.id}" opacity="${dim}" tabindex="0" role="button"
+      aria-label="${s.n} — ${STC[s.st].l}">${ping}
+      <circle class="ring" cx="${s.x}" cy="${s.y}" r="7.5" stroke="${c}" opacity="${s.st==='ok'?.4:.85}"/>
+      ${core}<circle class="hit" cx="${s.x}" cy="${s.y}" r="18"/>
+      ${s.hero?`<rect x="${s.x-13}" y="${s.y-13}" width="26" height="26" fill="none" stroke="${c}"
+        stroke-width=".8" stroke-dasharray="3 3" opacity=".7"/>`:""}</g>`}).join("");
+  return `<svg class="map" viewBox="40 55 440 470" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="0" width="520" height="560" fill="var(--mapbg)"/>
+    <path fill="var(--mapland)" stroke="var(--mapline)" stroke-width="1" d="
+      M 40,55 H 500 V 352 L 478,396 L 452,428 L 430,442 L 408,452
+      Q 396,462 384,456 Q 368,448 356,436 L 330,412 L 294,378 L 256,356 L 226,336
+      Q 210,322 198,310 C 188,300 174,304 168,318 Q 156,330 136,338
+      L 94,348 Q 70,346 65,329 Q 61,307 81,293 L 116,268 L 152,248
+      L 150,206 L 138,150 L 118,96 L 106,55 Z"/>
+    <path fill="var(--mapbg)" stroke="var(--mapline)" stroke-width=".8" d="
+      M 126,262 L 156,236 L 196,206 L 240,174 L 300,138 L 370,108 L 462,94
+      L 466,116 L 374,130 L 306,160 L 250,196 L 208,228 L 176,256 L 150,286 Z"/>
+    <text class="maplbl" x="452" y="332" text-anchor="end">Srđ</text>
+    <ellipse cx="443" cy="504" rx="15" ry="8" transform="rotate(-32 443 504)" fill="var(--mapland)"
+             stroke="var(--mapline)" stroke-width=".8"/>
+    <text class="maplbl" x="443" y="522" text-anchor="middle">Lokrum</text>
+    <text class="maplbl" x="371" y="72" text-anchor="middle">Mokošica</text>
+    <text class="maplbl" x="200" y="248" text-anchor="end">Gruž</text>
+    <text class="maplbl" x="116" y="300" text-anchor="middle">Lapad</text>
+    <text class="maplbl" x="398" y="450" text-anchor="middle">Grad</text>
+    ${pins}</svg>`;
+}
+function rowsHTML(){
+  return SITES.filter(s=>!filter||s.st===filter).sort((a,b)=>(SEVW[a.st]??9)-(SEVW[b.st]??9)).map(s=>
+    `<button class="row ${sel===s.id?'sel':''}" data-id="${s.id}">
+      <span class="mk ${s.st}"></span>
+      <span class="b"><span class="n">${s.n}${s.hero?' <span class="tag">10 katova</span>':''}</span>
+        <span class="a">${s.al.length?`<span style="color:var(--red)">${s.al.map(a=>FAULTS[a].c).join(" · ")}</span> · `:""}${s.d}</span></span>
+      <span class="rt"><span class="big" data-live="out:${s.id}">${s.out===null?"—":hr(s.out)+"°"}</span>
+        <span class="ag" data-live="age:${s.id}">${fmtAge(s.age)}</span></span></button>`).join("");
+}
+function spark(p,c){const w=200,h=20,mx=Math.max(...p),mn=Math.min(...p);
+  const d=p.map((v,i)=>`${i/(p.length-1)*w},${h-(v-mn)/((mx-mn)||1)*(h-3)-1.5}`).join(" ");
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+    <polyline points="${d}" fill="none" stroke="${c}" stroke-width="1.8" stroke-linecap="round"
+      vector-effect="non-scaling-stroke"/></svg>`;}
+function px(c){return `<div class="px">${[.2,.4,.6,.8,1].map(o=>
+  `<i style="background:${c};opacity:${o}"></i>`).join("")}</div>`;}
+
+function route(){
+  drawCounts();
+  const T={dash:["Nadzor",SITES.length+" lokacija"],alarms:["Alarmi",nAl()+" aktivnih"],
+           energy:["Energija","30 dana"],bld:["Zgrada","Toranj Mokošica A"]};
+  $("pgT").textContent=T[page][0];$("pgS").textContent=T[page][1];
+  $("page").innerHTML=page==="dash"?dashHTML():page==="alarms"?alarmsHTML():
+                      page==="energy"?energyHTML():bldHTML();
+  bind();reveal();
+}
+function dashHTML(){
+  const nq=SITES.filter(s=>s.st==="stale"||s.st==="off").length;
+  return `<div class="kpis">
+    <div class="kpi r3d"><div class="meta">COP</div>
+      <div class="v" data-live="cop">${hr(fleetCop(),2)}</div>${spark([3.1,3.3,3.2,3.5,3.4,3.6,3.42],"var(--red)")}</div>
+    <div class="kpi r3d"><div class="meta">Snaga</div>
+      <div class="v" data-live="kw">128</div>${spark([5,5.4,6.1,5.8,6.4,6,6.5],"var(--red)")}</div>
+    <div class="kpi alarm r3d"><div class="meta">Alarmi</div>
+      <div class="v">${nAl()}</div>${px("#FFFFFF")}</div>
+    <div class="kpi r3d"><div class="meta">Bez podataka</div>
+      <div class="v">${nq}</div>${px("var(--red)")}</div>
+  </div>
+  <div class="hero">
+    <div class="panel night r3d">
+      <div class="ph"><h2>Dubrovnik</h2>
+        <div class="seg"><button class="${view==='map'?'on':''}" data-v="map">Karta</button>
+          <button class="${view==='list'?'on':''}" data-v="list">Popis</button></div></div>
+      <div class="mapbox">${view==='map'?mapSVG():`<div class="rows" style="max-height:none">${rowsHTML()}</div>`}</div>
+    </div>
+    <div class="panel r3d"><div class="ph"><h2>Lokacije</h2></div>
+      <div class="rows">${rowsHTML()}</div></div>
+  </div>${bldHTML(1)}`;
+}
+function bldHTML(){
+  const s=SITES.find(x=>x.hero);
+  return `<div class="bwrap">
+    <div class="panel bld r3d">
+      <div class="rh" style="margin-bottom:10px"><b>${s.n}</b><span>${s.ad}</span></div>
+      <div class="roof">
+        <div class="rh"><b>Krov · R290</b><span>150 kW</span></div>
+        <div class="casc">${[["1","on"],["2","on"],["3","idle"],["4","err"],["5","on"]]
+          .map(([i,c])=>`<div class="hp ${c}"><div class="id">TP${i}</div>
+            <div class="hz" data-live="hz:${i}">${c==="err"?"H62":c==="idle"?"—":"—"}</div></div>`).join("")}</div>
+      </div>
+      ${FLOORS.map(f=>{const pct=Math.max(0,Math.min(100,(f.t-18)/8*100));
+        return `<div class="floor ${f.hot?'hot':''}">
+          <span class="fn">${String(f.f).padStart(2,"0")}</span>
+          <span class="fbar"><i class="bar-i" style="width:${pct.toFixed(1)}%;
+            background:${f.hot?'var(--red)':'var(--ink)'}"></i></span>
+          <span class="ft" style="${f.hot?'color:var(--red)':''}" data-live="fl:${f.f}">${hr(f.t)}°</span>
+          <span class="fz">${f.z}</span></div>`}).join("")}
+      <div class="base"><span>Međuspremnik 2 000 l · PTV 2 × 1 000 l</span>
+        <span class="mono" data-live="dhw">53,1°</span></div>
+    </div>
+    <div class="panel r3d"><div class="ph"><h2>Rotacija</h2></div>
+      <div style="padding:0 16px 16px">
+        ${[["TP1",4118],["TP2",4090],["TP3",4102],["TP4",3126],["TP5",4110]].map(([k,v])=>{
+          const bad=v<3500;return `<div style="display:flex;align-items:center;gap:10px;margin:9px 0">
+            <span class="mono" style="width:28px;font-size:9.5px;color:var(--ink3)">${k}</span>
+            <span style="flex:1;height:4px;background:var(--sunk);overflow:hidden">
+              <i class="bar-i" style="width:${(v/4200*100).toFixed(1)}%;
+                background:${bad?'var(--red)':'var(--ink)'}"></i></span>
+            <span class="mono" style="width:42px;text-align:right;font-size:10.5px">${v}</span></div>`}).join("")}
+        <div class="note red"><b>TP4</b> · 992 h iza, stoji na H62.</div>
+        <h3 class="sec">Krivulja grijanja</h3>
+        <svg viewBox="0 0 300 104" style="width:100%">
+          <line x1="30" y1="88" x2="292" y2="88" stroke="var(--line)"/>
+          <line x1="30" y1="8" x2="30" y2="88" stroke="var(--line)"/>
+          <polyline points="42,20 106,40 186,60 278,76" fill="none" stroke="var(--red)" stroke-width="2.4"
+            stroke-linecap="round"/>
+          ${[[42,20],[106,40],[186,60],[278,76]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="3.6"
+            fill="var(--paper)" stroke="var(--red)" stroke-width="2.4"/>`).join("")}
+          <text x="42" y="100" fill="var(--ink3)" font-size="8" text-anchor="middle">−10°</text>
+          <text x="278" y="100" fill="var(--ink3)" font-size="8" text-anchor="middle">+18°</text>
+        </svg>
+      </div>
+    </div></div>`;
+}
+function alarmsHTML(){
+  const r=[];SITES.forEach(s=>s.al.forEach(c=>r.push([s,c])));
+  r.sort((a,b)=>SEVW[FAULTS[a[1]].s]-SEVW[FAULTS[b[1]].s]);
+  const n=r.length+1;
+  return `<div class="health ${n>5?'bad':''} r3d">
+      <span><b>${n}</b> <span class="meta" style="margin-left:6px">aktivnih</span></span>
+      <span class="meta">Interni cilj · ispod 5</span></div>
+    ${r.map(([s,c])=>`<div class="r3d">${alarmHTML(s,c)}</div>`).join("")}
+    <div class="r3d"><div class="al sev-stale">
+      <div class="code">Bez signala</div>
+      <div class="desc">Zvonimir Seafront · <i>nikad kao ispravno</i></div>
+      <div class="m meta" data-live="staleage">Šetalište Kralja Zvonimira 18</div>
+      <div class="pills"><span class="pill p-act">Aktivan</span><span class="pill p-un">Nepotvrđen</span></div>
+      <div class="acts"><button class="pri ackb" data-ack="LAP2:stale">Potvrdi</button>
+        <button>Dodijeli</button><button disabled>Odgodi</button></div></div></div>`;
+}
+function energyHTML(){
+  const v=[...SITES].filter(s=>s.cop).sort((a,b)=>a.cop-b.cop);
+  return `<div class="panel r3d"><div class="ph"><h2>COP</h2></div>
+    <div style="padding:0 16px 16px">
+      ${v.map(s=>{const bad=s.cop<2.8;
+        return `<div style="display:flex;align-items:center;gap:11px;margin:10px 0">
+          <span style="width:146px;font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;
+            text-overflow:ellipsis">${s.n}</span>
+          <span style="flex:1;height:5px;background:var(--sunk);overflow:hidden">
+            <i class="bar-i" data-copbar="${s.id}" style="width:${(s.cop/4.6*100).toFixed(1)}%;
+              background:${bad?'var(--red)':'var(--ink)'}"></i></span>
+          <span style="width:42px;text-align:right;font-family:var(--display);font-weight:900;
+            font-size:13px;letter-spacing:-.04em;color:${bad?'var(--red)':'var(--ink)'}"
+            data-live="scop:${s.id}">${hr(s.cop,2)}</span></div>`}).join("")}
+      <div class="note red"><b>Vukovarska 2,11</b> · F95 + F16</div>
+    </div></div>`;
+}
+function tile(k,v,u,reg,cls,age,live){
+  return `<div class="tile ${cls||''}"><div class="k"><span class="meta">${k}</span>
+    <span class="age">${age||''}</span></div>
+    <div class="v"${live?` data-live="${live}"`:""}>${v}<span class="u">${u||''}</span></div>
+    <div class="reg">${reg}</div></div>`;
+}
+function alarmHTML(s,code){
+  const f=FAULTS[code];
+  const rt=f.retry?`<span class="pill p-rt">Pokušaj ${f.retry[0]}/${f.retry[1]}</span>`:"";
+  return `<div class="al sev-${f.s}">
+    <div class="code" style="${f.s==='crit'?'color:var(--red)':''}">${f.c}<em>reg 52 = ${code}</em></div>
+    <div class="desc">${f.t}${f.note?` · <i>${f.note}</i>`:""}</div>
+    <div class="m meta">${s.ad} · ${fmtAge(({162:4680,174:1260,295:2100,216:540,190:11400})[code]||3600)}</div>
+    <div class="pills"><span class="pill p-act">Aktivan</span><span class="pill p-un">Nepotvrđen</span>
+      <span class="pill p-ak">${f.k==="H"?"Samo serviser":f.k==="U"?"Korisnik":"Nerazvrstano"}</span>${rt}</div>
+    <div class="acts"><button class="pri ackb" data-ack="${s.id}:${code}">Potvrdi</button>
+      <button>Dodijeli</button><button>Odgodi</button></div></div>`;
+}
+const scrim=$("scrim"),drawer=$("drawer");
+function open(t,h){close._r=document.activeElement;$("dT").textContent=t;$("dB").innerHTML=h;
+  scrim.classList.add("on");drawer.classList.add("on");drawer.scrollTop=0;}
+function close(){scrim.classList.remove("on");drawer.classList.remove("on");
+  if(close._r&&close._r.focus)close._r.focus();}
+scrim.onclick=close;$("dX").onclick=close;
+addEventListener("keydown",e=>{if(e.key==="Escape"&&drawer.classList.contains("on"))close();});
+function openSite(id){sel=id;const s=SITES.find(x=>x.id===id);route();open(s.n,siteHTML(s));bindSite(s);}
+function siteHTML(s){return `<div class="tabs">
+  ${[["stanje","Stanje"],["stat","Statistika"],["post","Postavke"]].map(([k,l])=>
+    `<button data-t="${k}" class="${tab===k?'on':''}">${l}</button>`).join("")}</div>${siteTab(s)}`;}
+function siteTab(s){
+  const q=s.st==="stale"||s.st==="off",A=fmtAge(s.age),SC=q?"stale":"";
+  if(tab==="stanje")return `
+    ${q?`<div class="note"><b>Nema podataka · ${A}</b></div>`:""}
+    ${s.al.length?s.al.map(c=>alarmHTML(s,c)).join(""):""}
+    <h3 class="sec">Stanje</h3>
+    <div class="tiles">
+      ${tile("Vanjska",q?"—":hr(s.out),"°","reg 1",SC,A,q?null:"dout:"+s.id)}
+      ${tile("Polaz",q?"—":hr(s.ol),"°","reg 2",SC,A,q?null:"dol:"+s.id)}
+      ${tile("Povrat",q?"—":hr(s.il),"°","reg 3",SC,A,q?null:"dil:"+s.id)}
+      ${tile("Δt",q?"—":hr(s.ol-s.il),"K","—",SC,A,q?null:"ddt:"+s.id)}
+      ${tile("Spremnik",q?"—":"53,1","°","reg 33",SC,A)}
+      ${tile("Tlak",q?"—":hr(s.pr,2),"bar","reg 112",SC,A)}
+      ${tile("Kompresor",q?"—":s.hz,"Hz","—",SC,A,q?null:"dhz:"+s.id)}
+      ${tile("Kvar",s.al.length?FAULTS[s.al[0]].c:"Nema","","reg 52",s.al.length?"alarm":SC,A)}
+      ${tile("COP",q?"—":hr(s.cop,2),"","—",SC,A,q?null:"dcop:"+s.id)}
+    </div>
+    <h3 class="sec">Jedinica</h3>
+    <div class="idst">
+      <div><span class="meta">Adresa</span><span>${s.ad}</span></div>
+      <div><span class="meta">Model</span><span>${s.model}</span></div>
+      <div><span class="meta">Sučelje</span><span>${s.gw}</span></div>
+      <div><span class="meta">Serijski broj</span><span>${s.ser}</span></div>
+      <div><span class="meta">Signal</span><span>${s.rssi===null?"—":s.rssi+" dBm"}</span></div>
+      <div><span class="meta">Pristup</span><span style="color:var(--red)">Nadzor i upravljanje</span></div>
+    </div>`;
+  if(tab==="stat")return `<div class="tiles">
+      ${tile("Potrošeno","1 842","kWh","reg 120–131",SC,A)}
+      ${tile("Proizvedeno","6 301","kWh","reg 366–373",SC,A)}
+      ${tile("COP",q?"—":hr(s.cop,2),"","—",SC,A)}
+      ${tile("Sati rada","4 118","h","reg 184/185",SC,A)}
+      ${tile("Pokretanja","2,4","/h","—",SC,A)}
+      ${tile("Sterilizacija","Uredno","","reg 259/260",SC,A)}</div>
+    <div class="note"><b>Cilj:</b> 365 dana lokalno. Demo ne pohranjuje ništa.</div>`;
+  return `<div class="ctl"><div class="ch"><span class="meta">Rad</span>
+      <span class="mono" style="font-size:9.5px;color:var(--ink3)">reg 0</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
+        <span style="font-size:14px;font-weight:700">Uključeno</span>
+        <button type="button" class="sw on" data-sw role="switch" aria-checked="true"><i></i></button></div></div>
+    <div class="ctl"><div class="ch"><span class="meta">Zona 1</span>
+      <span class="mono" style="font-size:9.5px;color:var(--ink3)">reg 12</span></div>
+      <div class="stp"><button data-sp="-1">−</button>
+        <span class="val"><span id="spv">22,0</span><span style="font-size:16px;color:var(--ink3)">°</span></span>
+        <button data-sp="1">+</button></div></div>
+    <div class="ctl"><div class="ch"><span class="meta">PTV</span>
+      <span class="mono" style="font-size:9.5px;color:var(--ink3)">reg 30/33</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
+        <span style="font-size:14px;font-weight:700">53,1 → 55°</span>
+        <button type="button" class="sw on" data-sw role="switch" aria-checked="true"><i></i></button></div></div>
+    <div class="acts" style="margin-top:12px"><button class="pri" id="applyBtn"
+      style="padding:14px;font-size:11px">Primijeni</button></div>
+    <div class="note"><b>Vrijedi zadnji upis.</b> Zidni regulator može prepisati.</div>`;
+}
+function bindSite(s){
+  document.querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>{tab=b.dataset.t;
+    $("dB").innerHTML=siteHTML(s);bindSite(s);});
+  document.querySelectorAll("[data-sw]").forEach(w=>w.onclick=()=>{
+    const on=w.classList.toggle("on");w.setAttribute("aria-checked",on);});
+  document.querySelectorAll("[data-sp]").forEach(b=>b.onclick=()=>{const e=$("spv");
+    const n=Math.min(30,Math.max(16,parseFloat(e.textContent.replace(",","."))+parseFloat(b.dataset.sp)*.5));
+    e.textContent=hr(n);});
+  ackBind();const a=$("applyBtn");
+  if(a)a.onclick=()=>{a.textContent="Povratno čitanje…";
+    setTimeout(()=>a.textContent="Potvrđeno ✓",700);};
+}
+function ackBind(){document.querySelectorAll(".ackb").forEach(b=>{
+  const k=b.dataset.ack;
+  const paint=()=>{b.textContent="Potvrdio Vido";b.disabled=true;
+    const p=b.closest(".al").querySelector(".p-un");
+    if(p){p.className="pill p-ak";p.textContent="Potvrđen";}};
+  if(k&&ACKED.has(k))paint();
+  b.onclick=()=>{if(k)ACKED.add(k);paint();};});}
+function bind(){
+  document.querySelectorAll(".row").forEach(b=>b.onclick=()=>openSite(b.dataset.id));
+  document.querySelectorAll(".pin").forEach(p=>{p.onclick=()=>openSite(p.dataset.id);
+    p.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openSite(p.dataset.id);}};});
+  document.querySelectorAll("[data-v]").forEach(b=>b.onclick=()=>{view=b.dataset.v;route();});
+  ackBind();
+}
+let io;const show=e=>e.classList.remove("pre");
+function reveal(){
+  const els=[...document.querySelectorAll(".r3d")];
+  if(!("IntersectionObserver" in window)||matchMedia("(prefers-reduced-motion:reduce)").matches){
+    els.forEach(show);return;}
+  if(io)io.disconnect();
+  io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){show(e.target);io.unobserve(e.target);}}),
+    {threshold:0,rootMargin:"0px 0px -3% 0px"});
+  els.forEach(e=>{if(e.getBoundingClientRect().top>innerHeight*.94){e.classList.add("pre");io.observe(e);}});
+  clearTimeout(reveal._t);
+  reveal._t=setTimeout(()=>document.querySelectorAll(".r3d.pre").forEach(show),1200);
+}
+
+/* ══ LIVE — real values drifting, painted in place. No re-render, no motion. ══ */
+const HZ={1:58,2:54,3:0,4:0,5:61};
+const jit=(v,a)=>+(v+(Math.random()-.5)*a).toFixed(3);
+function setLive(k,txt){
+  document.querySelectorAll(`[data-live="${k}"]`).forEach(el=>{
+    if(el.firstChild&&el.firstChild.nodeType===3){
+      if(el.firstChild.nodeValue===txt)return;el.firstChild.nodeValue=txt;
+    }else{if(el.textContent===txt)return;el.textContent=txt;}
+    el.classList.remove("lit");void el.offsetWidth;el.classList.add("lit");});
+}
+function tickLive(){
+  SITES.forEach(s=>{
+    s.age+=1;
+    if(s.out===null)return;
+    s.out=Math.max(6,Math.min(13,jit(s.out,.55)));
+    s.ol=Math.max(30,Math.min(55,jit(s.ol,.9)));
+    s.il=Math.max(28,Math.min(52,jit(s.il,.8)));
+    if(s.hz>0)s.hz=Math.round(Math.max(28,Math.min(72,jit(s.hz,5))));
+    if(s.cop)s.cop=Math.max(1.9,Math.min(4.6,jit(s.cop,.11)));
+    setLive("out:"+s.id,hr(s.out)+"°");
+    setLive("age:"+s.id,fmtAge(s.age));
+    setLive("dout:"+s.id,hr(s.out));setLive("dol:"+s.id,hr(s.ol));setLive("dil:"+s.id,hr(s.il));
+    setLive("ddt:"+s.id,hr(s.ol-s.il));setLive("dhz:"+s.id,String(s.hz));
+    if(s.cop){setLive("dcop:"+s.id,hr(s.cop,2));setLive("scop:"+s.id,hr(s.cop,2));
+      const b=document.querySelector(`[data-copbar="${s.id}"]`);
+      if(b)b.style.width=(s.cop/4.6*100).toFixed(1)+"%";}
+  });
+  setLive("cop",hr(fleetCop(),2));
+  setLive("kw",String(Math.round(jit(128,14))));
+  [1,2,5].forEach(i=>{HZ[i]=Math.round(Math.max(30,Math.min(70,jit(HZ[i],5))));
+    setLive("hz:"+i,String(HZ[i]));});
+  setLive("hz:3","—");setLive("hz:4","H62");
+  FLOORS.forEach(f=>{f.t=Math.max(19,Math.min(24,jit(f.t,.22)));setLive("fl:"+f.f,hr(f.t)+"°");});
+  setLive("dhw",hr(Math.max(48,Math.min(58,jit(53.1,.6))))+"°");
+  const l=SITES.find(x=>x.id==="LAP2");
+  setLive("staleage","Šetalište Kralja Zvonimira 18 · "+fmtAge(l.age));
+}
+/* ══ assistant ══ */
+const HIST=[];
+function answer(q){
+  const t=q.toLowerCase(),has=(...w)=>w.some(x=>t.includes(x));
+  const al=SITES.filter(s=>s.al.length),st=SITES.filter(s=>s.st==="stale"||s.st==="off");
+  if(has("adres","gdje","koja zgrada","lokacij")&&has("alarm","kvar","greš","upozor","javlja"))
+    return[`<b>${al.length} u alarmu.</b><br>`+al.map(s=>
+      `• <b>${s.ad}</b> — ${s.al.map(a=>FAULTS[a].c).join(", ")}`).join("<br>"),`reg 52 ≠ 0`];
+  if(has("najgor","najniž","cop","učinkov")){const l=SITES.filter(s=>s.cop).sort((a,b)=>a.cop-b.cop).slice(0,3);
+    return[`<b>Najniži COP</b><br>`+l.map(s=>`• ${s.n} — <b>${hr(s.cop,2)}</b>`).join("<br>"),
+      `reg 366–373 ÷ 120–131`];}
+  if(has("bez signala","offline","nema podataka","ne javlja"))
+    return[`<b>${st.length} bez signala.</b><br>`+st.map(s=>`• ${s.n} — ${s.ad} · ${fmtAge(s.age)}`).join("<br>"),
+      `starost > 2 × interval`];
+  if(has("h62","protok"))return[`<b>H62 · sklopka protoka</b> (reg 52 = 162)<br>
+    <b>${SITES.find(s=>s.al.includes(162))?.ad}</b><br><br>Najčešći kvar. Filtar, zračni čep, tlak ispod
+    1,0 bar. Klasa H = samo serviser.`,`FAULTS[162]`];
+  if(has("h74","pcb"))return[`<b>H74 · PCB</b> (reg 52 = <b>174</b>, ne 1074)<br>
+    <b>${SITES.find(s=>s.al.includes(174))?.ad}</b><br><br>U povijesti, ne na uređaju — korisnik ga
+    ne vidi.`,`FAULTS[174]`];
+  if(has("10","deset","kat","toranj","mokošic","mokosic")){const s=SITES.find(x=>x.hero);
+    return[`<b>${s.n}</b> · ${s.ad}<br><br>Krov: 5 × WH-WXG30ME8, 150 kW, kaskada CME10, CZ-NSMB po
+      jedinici. R290 monoblok — propan izvan zgrade.<br><br>
+      <b style="color:var(--red)">${s.al.map(a=>FAULTS[a].c).join(" + ")}</b> · COP ${hr(s.cop,2)}.
+      TP4 stoji, 992 h iza.`,`SITES.MOK`];}
+  if(has("koliko","flota")){const c={};SITES.forEach(s=>c[s.st]=(c[s.st]||0)+1);
+    return[`<b>${SITES.length} lokacija</b><br>`+Object.entries(c).map(([k,v])=>
+      `• ${v} · ${STC[k].l.toLowerCase()}`).join("<br>"),`zbirno`];}
+  if(has("tko")&&has("promijen","postav","upisa"))
+    return[`<b>21,0 → 23,5°</b> · Iva Vojnovića 41 · 08:14<br>Izvor: <b>zidni regulator</b>.<br><br>
+      Nema zaključavanja — vrijedi zadnji upis.`,`zapis`];
+  return[`Alarmi, adrese, COP, lokacije bez signala, rotacija.<br><br>
+    <i>„koja adresa javlja alarm?“</i> · <i>„što je H62?“</i> · <i>„najgori COP“</i>`,`nema podudaranja`];
+}
+function openAI(){
+  open("Asistent",`<div class="chat" id="chat"></div>
+    <div class="qs">${["Koja adresa javlja alarm?","Što je H62?","Najgori COP","Tko je promijenio postavku?"]
+      .map(q=>`<button class="q">${q}</button>`).join("")}</div>
+    <div class="ask"><input id="ai" placeholder="Pitaj…" autocomplete="off"/><button id="go">↑</button></div>`);
+  const chat=$("chat"),inp=$("ai");
+  const push=(w,h,s)=>{const d=document.createElement("div");d.className="msg "+w;
+    d.innerHTML=h+(s?`<div class="src">${s}</div>`:"");chat.appendChild(d);
+    drawer.scrollTop=drawer.scrollHeight;};
+  if(!HIST.length)push("a","Dobar dan, Vido. Smart Solutions — radim u ovoj stranici, bez oblaka i bez korisničkog "+
+    "računa. Odgovaram i bez interneta.","lokalno");
+  HIST.forEach(([w,h,s])=>push(w,h,s));
+  const send=q=>{if(!q.trim())return;push("u",q);HIST.push(["u",q,null]);
+    const[a,s]=answer(q);setTimeout(()=>{push("a",a,s);HIST.push(["a",a,s]);},120);inp.value="";};
+  $("go").onclick=()=>send(inp.value);
+  inp.onkeydown=e=>{if(e.key==="Enter")send(inp.value);};
+  document.querySelectorAll(".q").forEach(b=>b.onclick=()=>send(b.textContent));
+}
+$("burger").onclick=()=>$("aside").classList.toggle("on");
+drawNav();route();
+if(!matchMedia("(prefers-reduced-motion:reduce)").matches)setInterval(tickLive,700);
+</script>
