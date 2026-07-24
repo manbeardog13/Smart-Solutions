@@ -98,6 +98,7 @@ function renderGate() {
   root.innerHTML = `${splash}
     <div class="gate">
       <div class="auth-bg" aria-hidden="true"></div>
+      <img class="mbd-sig" src="brand/mbd13.png" alt="" aria-hidden="true">
       <div class="login-card" role="dialog" aria-label="Prijava">
         <div class="lc-top">
           <img class="lc-logo" src="brand/logo-full.png" alt="smart solutions">
@@ -223,6 +224,7 @@ function renderShell(freshLogin = false) {
   root.innerHTML = `
     <div class="wash"></div>
     <div class="grain" aria-hidden="true"></div>
+    <img class="mbd-sig" src="brand/mbd13.png" alt="" aria-hidden="true">
     <aside class="side" id="side" aria-label="Glavni izbornik">
       <div class="sb-head">
         <span class="sb-eyebrow">Izbornik</span>

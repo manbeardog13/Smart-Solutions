@@ -100,6 +100,14 @@ drawn shapes, arcs, or lines, ever.
   bevels, faded catalogue imagery) lives on the DASHBOARD HERO, not on
   the logon.
 
+## Maker's mark (every MBD platform)
+
+Toni's MBD13 signature (`brand/mbd13.png`, white mark with alpha) sits
+fixed at the bottom-center of every screen — gate and app — at ~20px,
+8–9% opacity, `filter:invert(1)` in light mode, native white in dark.
+Slightly noticeable, always present, never interactive
+(`pointer-events:none`).
+
 ## Accessibility floor (non-negotiable)
 
 44px touch targets (52px in field-mode); visible `:focus-visible` ring;
