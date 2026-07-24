@@ -12,6 +12,9 @@ export function render(main) {
     <div class="panel">
       <div class="ph">${icon("order")}<h2>Radni nalozi</h2>
         <span class="meta" style="margin-left:auto">${hrCount(orders.length, ["otvoren", "otvorena", "otvorenih"])}</span></div>
+      ${orders.length === 0 ? `
+        <div class="row"><span class="b"><span class="n">Nema otvorenih radnih naloga.</span>
+          <span class="a">Novi nalozi pojavit će se ovdje.</span></span></div>` : ""}
       ${orders.map((o) => `
         <div class="row">
           <span class="b"><span class="n">${esc(o.client)} — ${esc(o.task)}</span>

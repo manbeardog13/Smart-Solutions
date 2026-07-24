@@ -83,5 +83,5 @@ export function announce(message) {
 
 export function setThemeColor(dark) {
   const meta = document.querySelector("meta[name=theme-color]");
-  if (meta) meta.setAttribute("content", dark ? "#0D0D0D" : "#F7F7F6");
+  if (meta) meta.setAttribute("content", dark ? "#0A0C11" : "#EEF0F1");
 }

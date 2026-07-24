@@ -143,12 +143,14 @@ function renderGate() {
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
       sp.remove();
     } else {
-      setTimeout(() => {
-        if (!sp.isConnected) return;
+      const reveal = () => {
+        if (!sp.isConnected || sp.classList.contains("out")) return;
         sp.classList.add("out");
         gateEl.classList.add("enter");
         setTimeout(() => sp.remove(), 460);
-      }, 1200);
+      };
+      sp.addEventListener("click", reveal); // never block an eager user
+      setTimeout(reveal, 900);
     }
   }
 
@@ -220,6 +222,7 @@ function renderShell(freshLogin = false) {
   html.classList.remove("side-open");
   root.innerHTML = `
     <div class="wash"></div>
+    <div class="grain" aria-hidden="true"></div>
     <aside class="side" id="side" aria-label="Glavni izbornik">
       <div class="sb-head">
         <span class="sb-eyebrow">Izbornik</span>
@@ -229,7 +232,8 @@ function renderShell(freshLogin = false) {
       </div>
       <nav class="sb-nav">
         ${nav.map((v) => `
-          <button class="sb-item" data-m="${esc(v.key)}" data-route="${esc(v.route)}">
+          <button class="sb-item" data-m="${esc(v.key)}" data-route="${esc(v.route)}"
+                  aria-label="${esc(v.label)}">
             ${icon(v.ic)}<span class="t">${esc(v.label)}</span>
           </button>`).join("")}
       </nav>
@@ -295,8 +299,17 @@ function renderShell(freshLogin = false) {
   // Phone: hamburger opens the same sidebar as a left overlay with a scrim.
   const burger = root.querySelector("[data-burger]");
   const setSide = (open) => {
+    const was = html.classList.contains("side-open");
     html.classList.toggle("side-open", open);
     burger.setAttribute("aria-expanded", String(open));
+    // keyboard/AT: focus follows the overlay in, and back out to the burger
+    if (open && !was) {
+      const firstItem = root.querySelector(".sb-item");
+      if (firstItem) setTimeout(() => firstItem.focus({ preventScroll: true }), 340);
+    } else if (!open && was && document.activeElement &&
+               document.activeElement.closest && document.activeElement.closest(".side")) {
+      burger.focus({ preventScroll: true });
+    }
   };
   burger.onclick = () => setSide(!html.classList.contains("side-open"));
   root.querySelector("[data-scrim]").onclick = () => setSide(false);
@@ -316,9 +329,19 @@ function renderShell(freshLogin = false) {
   route(freshLogin);
 }
 
-// Escape closes the phone sidebar overlay — bound once at boot.
+// Escape closes the phone sidebar overlay — bound once at boot. Goes through
+// the same state as every other close path: burger aria stays true to reality
+// and focus returns to the burger instead of stranding on a hidden item.
 function sideEscCloser(e) {
-  if (e.key === "Escape") document.documentElement.classList.remove("side-open");
+  if (e.key !== "Escape") return;
+  const html = document.documentElement;
+  if (!html.classList.contains("side-open")) return;
+  html.classList.remove("side-open");
+  const burger = document.querySelector("[data-burger]");
+  if (burger) {
+    burger.setAttribute("aria-expanded", "false");
+    burger.focus({ preventScroll: true });
+  }
 }
 
 // Body-level overlays (reorder scrims) must never outlive the view or the
@@ -359,15 +382,26 @@ async function route(freshLogin = false) {
     if (itemMatch && !wh) toast("Nemate pristup skladištu za ovu naljepnicu.");
   }
   setState({ route: def.route });
-  document.querySelectorAll(".sb-item[data-route]").forEach((b) =>
-    b.classList.toggle("on", b.dataset.route === def.route));
+  document.querySelectorAll(".sb-item[data-route]").forEach((b) => {
+    const on = b.dataset.route === def.route;
+    b.classList.toggle("on", on);
+    if (on) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
+  });
   const title = document.getElementById("page-title");
   if (title) title.textContent = def.label;
   let mod;
   try {
     mod = await def.load();
   } catch {
-    if (seq === routeSeq) toast("Učitavanje nije uspjelo — provjeri vezu i pokušaj ponovno.");
+    if (seq === routeSeq && currentMain) {
+      currentMain.innerHTML = `
+        <div class="panel"><div class="row"><span class="b">
+          <span class="n">Učitavanje nije uspjelo.</span>
+          <span class="a">Provjeri vezu i pokušaj ponovno.</span></span>
+          <button class="btn btn-ghost" data-retry>Pokušaj ponovno</button></div></div>`;
+      const r = currentMain.querySelector("[data-retry]");
+      if (r) r.onclick = () => route();
+    }
     return;
   }
   if (seq !== routeSeq || getState().session !== session) return; // superseded
@@ -392,9 +426,7 @@ function boot() {
   applyDevice();
   addEventListener("resize", applyDevice);
   addEventListener("hashchange", () => route());
-  if (matchMedia("(hover: none)").matches) {
   document.addEventListener("keydown", sideEscCloser);
-  }
   // Another tab changed the shared demo DB or the session — reflect it here.
   addEventListener("storage", (e) => {
     if (e.key === "ss.demo.db" && getState().session) route();
@@ -415,7 +447,27 @@ function boot() {
   on("auth", () => { /* future: realtime (re)subscribe here */ });
 
   loadSession();
-  if (getState().session) renderShell(); else renderGate();
+  if (getState().session) {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      renderShell();
+    } else {
+      // the standard's launch sequence applies to warm sessions too:
+      // brand mark -> (already authenticated) -> role dashboard
+      root.innerHTML = `
+        <div class="splash" aria-hidden="true">
+          <div class="sp-core">
+            <img class="sp-mark" src="brand/logo-mark.png" alt="">
+            <i class="sp-rule"></i>
+          </div>
+        </div>`;
+      const sp = root.querySelector(".splash");
+      const goShell = () => { if (sp.isConnected) renderShell(); };
+      sp.addEventListener("click", goShell);
+      setTimeout(goShell, 900);
+    }
+  } else {
+    renderGate();
+  }
 }
 
 boot();

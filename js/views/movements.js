@@ -11,6 +11,9 @@ export function render(main) {
     <div class="panel">
       <div class="ph">${icon("move")}<h2>Kretanja</h2>
         <span class="meta" style="margin-left:auto">nedavno</span></div>
+      ${movements.length === 0 ? `
+        <div class="row"><span class="b"><span class="n">Nema zabilježenih kretanja.</span>
+          <span class="a">Zaprimanja i izdavanja bilježe se ovdje.</span></span></div>` : ""}
       ${movements.map((m) => {
         const item = items.get(m.item);
         return `
@@ -18,7 +21,7 @@ export function render(main) {
           ${item ? thumb(item) : ""}
           <span class="b"><span class="n">${esc(m.what)} — ${esc(item ? item.name : m.item)}</span>
             <span class="a">${esc(m.ts)} · ${esc(m.who)}</span></span>
-          <span class="rt"><span class="big" style="color:${m.qty >= 0 ? "inherit" : "var(--red)"}">
+          <span class="rt"><span class="big" style="color:${m.qty >= 0 ? "inherit" : "var(--red-text)"}">
             ${m.qty >= 0 ? "+" : ""}${esc(String(m.qty))}</span></span>
         </div>`;
       }).join("")}
