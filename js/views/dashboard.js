@@ -63,12 +63,12 @@ export function render(main, ctx) {
         : low.map((it) => canWarehouse ? `
         <button class="row" data-goto-item="${esc(it.id)}">
           <span class="b"><span class="n">${esc(it.name)}</span></span>
-          <span class="rt"><span class="big">${esc(String(it.qty))}</span>
+          <span class="rt"><span class="big low">${esc(String(it.qty))}</span>
             <span class="ag">min ${esc(String(it.min))}</span></span>
         </button>` : `
         <div class="row">
           <span class="b"><span class="n">${esc(it.name)}</span></span>
-          <span class="rt"><span class="big">${esc(String(it.qty))}</span>
+          <span class="rt"><span class="big low">${esc(String(it.qty))}</span>
             <span class="ag">min ${esc(String(it.min))}</span></span>
         </div>`).join("")}
     </div>

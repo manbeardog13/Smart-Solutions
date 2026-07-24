@@ -777,4 +777,6 @@ The default company-platform look is the ASC application look, re-tinted per com
 	7.	**Logon + splash**: the single-card logon matched to the ASC phone build, measured by `scripts/audit-login.mjs` within ±2px (card edge gaps, every element's size, gaps, fonts, radii — scale the card, never cut it); splash is the brand mark alone with a thin brand rule beneath.
 	8.	**Theme**: intentional light and dark tokens for every surface. The theme control lives in the sidebar (dot = light, ring = dark) and on the logon card (iOS switch emitting a brand-colour micro-glow on press).
 
+	9.	**Asset photography is mandatory and automatic.** Every warehouse/inventory asset displays a real photo — never an icon or initial tile. The photo comes from the company catalogue when available; otherwise it is found and imported from online sources at the moment the asset is added (a close match is acceptable; record the source, e.g. `catalogue/images/parts/SOURCES.md`). Location codes and status badges stay out of lists — the quantity number itself carries the state (coloured when below minimum).
+
 A new platform starts by copying the reference implementation and re-tinting the brand colour, logo, imagery, and copy — never by re-designing this chrome.
